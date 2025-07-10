@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle } from 'lucide-react';
 import Cart from './components/Cart';
 import AddProductModal from './components/AddProductModal';
 import ProductList from './components/ProductList';
@@ -64,11 +63,19 @@ export default function Page() {
   const handleApplyPriceUpdate = () => {
     const newPrice = parseFloat(editingPrice);
     if (isNaN(newPrice)) return;
+
     const updated = products.map(p =>
       p.id === editingProductId ? { ...p, price: newPrice } : p
     );
     setProducts(updated);
     localStorage.setItem('products', JSON.stringify(updated));
+
+    // ✅ Actualizar precio en carrito
+    const updatedCart = cartItems.map(p =>
+      p.id === editingProductId ? { ...p, price: newPrice } : p
+    );
+    setCartItems(updatedCart);
+
     setEditingProductId(null);
     setEditingPrice('');
   };
@@ -76,9 +83,7 @@ export default function Page() {
   const handleShowHistory = () => {
     const allSales: Sale[] = JSON.parse(localStorage.getItem('salesHistory') || '[]');
     const today = new Date().toISOString().split('T')[0];
-    const filtered = allSales
-      .filter((sale) => sale.timestamp.startsWith(today))
-      .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    const filtered = allSales.filter((sale) => sale.timestamp.startsWith(today));
     setSalesToday(filtered);
     setShowHistory(true);
   };
@@ -99,17 +104,8 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 font-sans">
-      <style>{`
-        @media print {
-          .no-print { display: none; }
-          .print\\:bg-white { background-color: white !important; }
-        }
-      `}</style>
-
       <div className="max-w-screen-xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-4 text-center text-blue-800">
-          Administración de Ventas
-        </h1>
+        <h1 className="text-4xl font-extrabold mb-4 text-center text-blue-800">Administración de Ventas</h1>
 
         <div className="mb-4 flex gap-2 items-center">
           <input
@@ -120,9 +116,9 @@ export default function Page() {
           />
           <button
             onClick={() => setConfirmedStoreName(storeName)}
-            className="bg-green-500 text-white px-3 py-2 rounded shadow flex items-center gap-1"
+            className="bg-green-500 text-white px-3 py-2 rounded shadow"
           >
-            <CheckCircle size={18} /> Confirmar
+            ✓
           </button>
         </div>
 
@@ -154,9 +150,38 @@ export default function Page() {
           />
         )}
 
+        {/* ✅ Mostrar ticket seleccionado */}
         {selectedSale && (
-          <div className="bg-gray-50 border p-4 rounded-lg mb-4 shadow print:bg-white">
-            {/* … contenido del ticket … */}
+          <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+            <h3 className="text-lg font-semibold mb-2">Ticket de venta</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              {new Date(selectedSale.timestamp).toLocaleString()}
+            </p>
+            <ul className="divide-y">
+              {selectedSale.items.map((item, i) => (
+                <li key={i} className="flex justify-between py-1 text-sm">
+                  <span>{item.name}</span>
+                  <span>${item.price.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 text-right font-bold">
+              Total: ${selectedSale.total.toFixed(2)}
+            </div>
+            <div className="mt-2 text-right">
+              <button
+                onClick={() => window.print()}
+                className="bg-gray-800 text-white px-3 py-1 rounded mr-2"
+              >
+                Imprimir
+              </button>
+              <button
+                onClick={() => setSelectedSale(null)}
+                className="text-blue-600 underline text-sm"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         )}
 
@@ -188,9 +213,9 @@ export default function Page() {
                       <span className="ml-2">Total: ${sale.total.toFixed(2)}</span>
                       <button
                         onClick={() => setSelectedSale(sale)}
-                        className="ml-4 text-blue-600 underline text-sm hover:text-blue-800"
+                        className="ml-4 text-blue-600 underline text-sm"
                       >
-                        🧾 Ver ticket
+                        Ver ticket
                       </button>
                     </div>
                   </li>
@@ -201,7 +226,6 @@ export default function Page() {
           </div>
         ) : (
           <>
-            {/* botones de filtro */}
             <div className="flex gap-2 mb-4 flex-wrap justify-center">
               {categories.map((cat) => (
                 <button
@@ -223,7 +247,6 @@ export default function Page() {
                 Todas
               </button>
             </div>
-            {/* listado de productos */}
             <ProductList
               products={products.filter(p => activeCategory === '' || p.category === activeCategory)}
               onAddToCart={addToCart}
@@ -239,9 +262,7 @@ export default function Page() {
       </div>
 
       {!showHistory && (
-        <div className="fixed top-4 right-4 w-64">
-          <Cart cart={cartItems} onClear={() => setCartItems([])} />
-        </div>
+        <Cart cart={cartItems} onClear={() => setCartItems([])} />
       )}
     </main>
   );
