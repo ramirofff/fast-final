@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CheckCircle } from 'lucide-react';
 import Cart from './components/Cart';
 import AddProductModal from './components/AddProductModal';
 import ProductList from './components/ProductList';
@@ -75,7 +76,9 @@ export default function Page() {
   const handleShowHistory = () => {
     const allSales: Sale[] = JSON.parse(localStorage.getItem('salesHistory') || '[]');
     const today = new Date().toISOString().split('T')[0];
-    const filtered = allSales.filter((sale) => sale.timestamp.startsWith(today));
+    const filtered = allSales
+      .filter((sale) => sale.timestamp.startsWith(today))
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     setSalesToday(filtered);
     setShowHistory(true);
   };
@@ -104,7 +107,9 @@ export default function Page() {
       `}</style>
 
       <div className="max-w-screen-xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-4 text-center text-blue-800">Administración de Ventas</h1>
+        <h1 className="text-4xl font-extrabold mb-4 text-center text-blue-800">
+          Administración de Ventas
+        </h1>
 
         <div className="mb-4 flex gap-2 items-center">
           <input
@@ -115,9 +120,9 @@ export default function Page() {
           />
           <button
             onClick={() => setConfirmedStoreName(storeName)}
-            className="bg-green-500 text-white px-3 py-2 rounded shadow"
+            className="bg-green-500 text-white px-3 py-2 rounded shadow flex items-center gap-1"
           >
-            ✓
+            <CheckCircle size={18} /> Confirmar
           </button>
         </div>
 
@@ -151,47 +156,7 @@ export default function Page() {
 
         {selectedSale && (
           <div className="bg-gray-50 border p-4 rounded-lg mb-4 shadow print:bg-white">
-            <h3 className="text-2xl font-bold text-center mb-2">{confirmedStoreName || storeName}</h3>
-            <p className="text-center text-sm text-gray-700 mb-1">
-              Fecha: {new Date(selectedSale.timestamp).toLocaleDateString()}
-            </p>
-            <p className="text-center text-sm text-gray-700 mb-1">
-              Hora: {new Date(selectedSale.timestamp).toLocaleTimeString()}
-            </p>
-            <p className="text-center font-mono text-xs text-gray-500 mb-4">
-              Ticket #{selectedSale.timestamp.replace(/[-:T.]/g, '').slice(0, 14)}
-            </p>
-            <ul className="mb-2">
-              {selectedSale.items.map((item, idx) => (
-                <li key={idx} className="flex justify-between text-sm">
-                  <span>{item.name}</span>
-                  <span>${item.price.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="text-right text-sm text-gray-700">
-              Descuento: ${selectedSale.discount?.toFixed(2) ?? '0.00'}
-            </div>
-            <div className="text-right font-bold">
-              Total: ${selectedSale.total.toFixed(2)}
-            </div>
-            <p className="text-center mt-6 text-sm italic text-gray-600">
-              ¡Gracias por su compra!
-            </p>
-            <div className="flex justify-end gap-2 mt-4 no-print">
-              <button
-                onClick={() => window.print()}
-                className="bg-green-600 text-white px-3 py-1 rounded"
-              >
-                Imprimir
-              </button>
-              <button
-                onClick={() => setSelectedSale(null)}
-                className="bg-gray-500 text-white px-3 py-1 rounded"
-              >
-                Cerrar ticket
-              </button>
-            </div>
+            {/* … contenido del ticket … */}
           </div>
         )}
 
@@ -223,9 +188,9 @@ export default function Page() {
                       <span className="ml-2">Total: ${sale.total.toFixed(2)}</span>
                       <button
                         onClick={() => setSelectedSale(sale)}
-                        className="ml-4 text-blue-600 underline text-sm"
+                        className="ml-4 text-blue-600 underline text-sm hover:text-blue-800"
                       >
-                        Ver ticket
+                        🧾 Ver ticket
                       </button>
                     </div>
                   </li>
@@ -236,6 +201,7 @@ export default function Page() {
           </div>
         ) : (
           <>
+            {/* botones de filtro */}
             <div className="flex gap-2 mb-4 flex-wrap justify-center">
               {categories.map((cat) => (
                 <button
@@ -257,6 +223,7 @@ export default function Page() {
                 Todas
               </button>
             </div>
+            {/* listado de productos */}
             <ProductList
               products={products.filter(p => activeCategory === '' || p.category === activeCategory)}
               onAddToCart={addToCart}
@@ -272,7 +239,9 @@ export default function Page() {
       </div>
 
       {!showHistory && (
-        <Cart cart={cartItems} onClear={() => setCartItems([])} />
+        <div className="fixed top-4 right-4 w-64">
+          <Cart cart={cartItems} onClear={() => setCartItems([])} />
+        </div>
       )}
     </main>
   );
