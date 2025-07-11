@@ -1,9 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Cart from './components/Cart';
 import AddProductModal from './components/AddProductModal';
 import ProductList from './components/ProductList';
+import Header from './components/Header';
+import CategorySelector from './components/CategorySelector';
+import SalesHistory from './components/SalesHistory';
+import TicketView from './components/TicketView';
 
 export interface Product {
   id: string;
@@ -13,7 +17,7 @@ export interface Product {
   category: string;
 }
 
-interface Sale {
+export interface Sale {
   timestamp: string;
   items: Product[];
   total: number;
@@ -23,7 +27,7 @@ interface Sale {
 export default function Page() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<Product[]>([]);
-  const [storeName, setStoreName] = useState<string>('Mi Local');
+  const [storeName, setStoreName] = useState<string>('');
   const [confirmedStoreName, setConfirmedStoreName] = useState<string>('');
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [salesToday, setSalesToday] = useState<Sale[]>([]);
@@ -33,6 +37,16 @@ export default function Page() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+
+  useEffect(() => {
+    const savedProducts = localStorage.getItem('products');
+    const savedCategories = localStorage.getItem('categories');
+    const savedStore = localStorage.getItem('confirmedStoreName');
+
+    if (savedProducts) setProducts(JSON.parse(savedProducts));
+    if (savedCategories) setCategories(JSON.parse(savedCategories));
+    if (savedStore) setConfirmedStoreName(savedStore);
+  }, []);
 
   const addToCart = (product: Product) => {
     setCartItems([...cartItems, product]);
@@ -70,7 +84,6 @@ export default function Page() {
     setProducts(updated);
     localStorage.setItem('products', JSON.stringify(updated));
 
-    // ✅ Actualizar precio en carrito
     const updatedCart = cartItems.map(p =>
       p.id === editingProductId ? { ...p, price: newPrice } : p
     );
@@ -83,7 +96,7 @@ export default function Page() {
   const handleShowHistory = () => {
     const allSales: Sale[] = JSON.parse(localStorage.getItem('salesHistory') || '[]');
     const today = new Date().toISOString().split('T')[0];
-    const filtered = allSales.filter((sale) => sale.timestamp.startsWith(today));
+    const filtered = allSales.filter(sale => sale.timestamp.startsWith(today));
     setSalesToday(filtered);
     setShowHistory(true);
   };
@@ -93,50 +106,38 @@ export default function Page() {
     setSalesToday([]);
   };
 
-  useEffect(() => {
-    const saved = localStorage.getItem('products');
-    const savedCats = localStorage.getItem('categories');
-    if (saved) setProducts(JSON.parse(saved));
-    if (savedCats) setCategories(JSON.parse(savedCats));
-  }, []);
+  const handleConfirmStoreName = () => {
+    if (storeName.trim() !== '') {
+      setConfirmedStoreName(storeName);
+      localStorage.setItem('confirmedStoreName', storeName);
+    }
+  };
 
   const totalToday = salesToday.reduce((acc, sale) => acc + sale.total, 0);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 font-sans">
-      <div className="max-w-screen-xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-4 text-center text-blue-800">Administración de Ventas</h1>
-
-        <div className="mb-4 flex gap-2 items-center">
-          <input
-            value={storeName}
-            onChange={(e) => setStoreName(e.target.value)}
-            className="border p-2 rounded shadow w-full max-w-xs"
-            placeholder="Nombre del local"
+    <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative">
+      <div className="max-w-screen-xl mx-auto space-y-4">
+        {!showHistory && (
+          <Header
+            storeName={storeName}
+            setStoreName={setStoreName}
+            confirmedStoreName={confirmedStoreName}
+            setConfirmedStoreName={handleConfirmStoreName}
           />
-          <button
-            onClick={() => setConfirmedStoreName(storeName)}
-            className="bg-green-500 text-white px-3 py-2 rounded shadow"
-          >
-            ✓
-          </button>
-        </div>
-
-        {confirmedStoreName && (
-          <h2 className="text-3xl font-bold text-center mb-4 text-gray-800">{confirmedStoreName}</h2>
         )}
 
-        {!showHistory && (
-          <div className="flex gap-2 mb-4 flex-wrap justify-center">
+        {!showHistory && confirmedStoreName && (
+          <div className="flex gap-3 flex-wrap justify-center mb-2">
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded shadow"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg shadow-md transition"
             >
               Agregar producto
             </button>
             <button
               onClick={handleShowHistory}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg shadow-md transition"
             >
               Historial de ventas del día
             </button>
@@ -144,125 +145,68 @@ export default function Page() {
         )}
 
         {showAddModal && (
-          <AddProductModal
-            onClose={() => setShowAddModal(false)}
-            onAdd={handleAddProduct}
-          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+              <AddProductModal
+                onClose={() => setShowAddModal(false)}
+                onAdd={handleAddProduct}
+              />
+            </div>
+          </div>
         )}
 
-        {/* ✅ Mostrar ticket seleccionado */}
         {selectedSale && (
-          <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-            <h3 className="text-lg font-semibold mb-2">Ticket de venta</h3>
-            <p className="text-sm text-gray-600 mb-2">
-              {new Date(selectedSale.timestamp).toLocaleString()}
-            </p>
-            <ul className="divide-y">
-              {selectedSale.items.map((item, i) => (
-                <li key={i} className="flex justify-between py-1 text-sm">
-                  <span>{item.name}</span>
-                  <span>${item.price.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-2 text-right font-bold">
-              Total: ${selectedSale.total.toFixed(2)}
-            </div>
-            <div className="mt-2 text-right">
-              <button
-                onClick={() => window.print()}
-                className="bg-gray-800 text-white px-3 py-1 rounded mr-2"
-              >
-                Imprimir
-              </button>
-              <button
-                onClick={() => setSelectedSale(null)}
-                className="text-blue-600 underline text-sm"
-              >
-                Cerrar
-              </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+              <TicketView sale={selectedSale} onClose={() => setSelectedSale(null)} />
             </div>
           </div>
         )}
 
         {showHistory ? (
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-2">Historial de ventas del día</h2>
-            <div className="flex justify-between mb-2">
-              <button
-                onClick={() => setShowHistory(false)}
-                className="bg-blue-500 text-white px-4 py-1 rounded"
-              >
-                Volver al menú principal
-              </button>
-              <button
-                onClick={handleClearHistory}
-                className="bg-red-500 text-white px-4 py-1 rounded"
-              >
-                Borrar historial
-              </button>
-            </div>
-            {salesToday.length === 0 ? (
-              <p className="text-gray-500">No hay ventas registradas hoy.</p>
-            ) : (
-              <ul className="space-y-4">
-                {salesToday.map((sale, i) => (
-                  <li key={i} className="border-b pb-2">
-                    <div className="text-sm text-gray-600">
-                      {new Date(sale.timestamp).toLocaleTimeString()} -
-                      <span className="ml-2">Total: ${sale.total.toFixed(2)}</span>
-                      <button
-                        onClick={() => setSelectedSale(sale)}
-                        className="ml-4 text-blue-600 underline text-sm"
-                      >
-                        Ver ticket
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="font-bold text-right mt-4">Total del día: ${totalToday.toFixed(2)}</div>
+          <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
+            <SalesHistory
+              salesToday={salesToday}
+              totalToday={totalToday}
+              onBack={() => setShowHistory(false)}
+              onClear={handleClearHistory}
+              onViewTicket={setSelectedSale}
+              localName={confirmedStoreName}
+            />
           </div>
         ) : (
-          <>
-            <div className="flex gap-2 mb-4 flex-wrap justify-center">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-2 rounded-full border shadow ${
-                    activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-              <button
-                onClick={() => setActiveCategory('')}
-                className={`px-4 py-2 rounded-full border shadow ${
-                  activeCategory === '' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
-                }`}
-              >
-                Todas
-              </button>
-            </div>
-            <ProductList
-              products={products.filter(p => activeCategory === '' || p.category === activeCategory)}
-              onAddToCart={addToCart}
-              onDelete={handleDeleteProduct}
-              onStartEditPrice={handleStartEditing}
-              editingProductId={editingProductId}
-              editingPrice={editingPrice}
-              setEditingPrice={setEditingPrice}
-              onApplyPriceUpdate={handleApplyPriceUpdate}
-            />
-          </>
+          confirmedStoreName && (
+            <>
+              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4">
+                <CategorySelector
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                />
+              </div>
+              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
+                <ProductList
+                  products={products.filter(
+                    p => activeCategory === '' || p.category === activeCategory
+                  )}
+                  onAddToCart={addToCart}
+                  onDelete={handleDeleteProduct}
+                  onStartEditPrice={handleStartEditing}
+                  editingProductId={editingProductId}
+                  editingPrice={editingPrice}
+                  setEditingPrice={setEditingPrice}
+                  onApplyPriceUpdate={handleApplyPriceUpdate}
+                />
+              </div>
+            </>
+          )
         )}
       </div>
 
-      {!showHistory && (
-        <Cart cart={cartItems} onClear={() => setCartItems([])} />
+      {!showHistory && confirmedStoreName && (
+        <div className="fixed top-24 right-4 w-80 max-h-[80vh] overflow-y-auto bg-white/90 border border-gray-300 rounded-xl shadow-xl p-4 z-50 backdrop-blur">
+          <Cart cart={cartItems} onClear={() => setCartItems([])} />
+        </div>
       )}
     </main>
   );
