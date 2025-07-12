@@ -16,6 +16,13 @@ export default function CartItemRow({ item, onUpdateQuantity }: Props) {
     setLocalQuantity(item.quantity.toString());
   }, [item.quantity]);
 
+  const handleBlur = () => {
+    const qty = parseInt(localQuantity);
+    if (!isNaN(qty)) {
+      onUpdateQuantity(item.id, qty);
+    }
+  };
+
   return (
     <li className="flex items-center gap-2 border-b pb-1">
       {item.image && (
@@ -36,10 +43,7 @@ export default function CartItemRow({ item, onUpdateQuantity }: Props) {
             min="0"
             value={localQuantity}
             onChange={(e) => setLocalQuantity(e.target.value)}
-            onBlur={() => {
-              const qty = parseInt(localQuantity) || 0;
-              onUpdateQuantity(item.id, qty);
-            }}
+            onBlur={handleBlur}
             className="border rounded px-2 py-1 text-sm w-16"
           />
           <button
