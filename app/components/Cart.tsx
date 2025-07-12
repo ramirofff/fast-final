@@ -65,6 +65,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
       onConfirm(sale);
       onClear(); // ✅ Vaciar carrito automáticamente luego del pago
     }, 3000);
+
   };
 
   const handlePrint = () => {

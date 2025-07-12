@@ -103,6 +103,8 @@ export default function Page() {
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
+
+
 return (
   <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
     <div className="fixed top-4 right-4 flex gap-3 z-50">
@@ -346,7 +348,7 @@ return (
         <>
           <button
             onClick={() => setShowCartMobile(true)}
-            className="fixed bottom-5 right-5 bg-green-600 text-white p-4 rounded-full shadow-lg lg:hidden z-50 relative"
+            className="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 p-2 rounded-full shadow-lg lg:hidden z-50 flex items-center justify-center"
           >
             🛒
             {cartItems.length > 0 && (
@@ -394,6 +396,10 @@ return (
     </div>
   </main>
 );
+
+
+
+;
 
 
   
