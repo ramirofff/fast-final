@@ -111,9 +111,17 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
       <div className="fixed top-4 right-4 flex gap-3 z-50">
-        <button onClick={() => setShowProductTable(true)} className="hover:scale-110 transition-transform">
-          <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
-        </button>
+<button
+  onClick={() => {
+          setShowProductTable(true);
+          setShowHistory(false); // 👉 Ocultar historial al ir a agregar productos
+          setSelectedSale(null); // 👉 Cerrar ticket si estaba abierto
+        }}
+        className="hover:scale-110 transition-transform"
+      >
+        <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
+</button>
+
         <button onClick={() => {
           setShowHistory(true);
           setShowProductTable(false);
@@ -141,39 +149,62 @@ export default function Page() {
           )}
 
           {!showHistory && !showProductTable && confirmedStoreName && (
-            <>
-              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
-                <CategorySelector
-                  categories={categories}
-                  activeCategory={activeCategory}
-                  setActiveCategory={setActiveCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                  onEditCategory={handleEditCategory}
-                />
-              </div>
-              <div className="p-2">
-                <input
-                  type="text"
-                  placeholder="Buscar productos..."
-                  className="w-full p-2 border rounded shadow-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
-                <ProductList
-                  products={filteredProducts}
-                  onAddToCart={addToCart}
-                  onDelete={() => {}}
-                  onStartEditPrice={() => {}}
-                  editingProductId={''}
-                  editingPrice={''}
-                  setEditingPrice={() => {}}
-                  onApplyPriceUpdate={() => {}}
-                />
-              </div>
-            </>
-          )}
+  <>
+    <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
+      <CategorySelector
+        categories={categories}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onEditCategory={handleEditCategory}
+      />
+    </div>
+    <div className="p-2">
+      <input
+        type="text"
+        placeholder="Buscar productos..."
+        className="w-full p-2 border rounded shadow-sm"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+    <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
+      <ProductList
+        products={filteredProducts}
+        onAddToCart={addToCart}
+        onDelete={(id) => {
+          const updated = products.filter(p => p.id !== id);
+          setProducts(updated);
+          localStorage.setItem('products', JSON.stringify(updated));
+        }}
+        onStartEditPrice={(id, price) => {
+          setEditingProductId(id);
+          setEditingPrice(price.toString());
+        }}
+        editingProductId={editingProductId}
+        editingPrice={editingPrice}
+        setEditingPrice={setEditingPrice}
+        onApplyPriceUpdate={() => {
+          const newPrice = parseFloat(editingPrice);
+          if (isNaN(newPrice)) return;
+          const updated = products.map(p =>
+            p.id === editingProductId ? { ...p, price: newPrice } : p
+          );
+          setProducts(updated);
+          localStorage.setItem('products', JSON.stringify(updated));
+
+          const updatedCart = cartItems.map(p =>
+            p.id === editingProductId ? { ...p, price: newPrice } : p
+          );
+          setCartItems(updatedCart);
+
+          setEditingProductId(null);
+          setEditingPrice('');
+        }}
+      />
+    </div>
+  </>
+)}
 
           {showProductTable && (
             <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
@@ -289,10 +320,16 @@ export default function Page() {
           <>
             <button
               onClick={() => setShowCartMobile(true)}
-              className="fixed bottom-5 right-5 bg-green-600 text-white p-4 rounded-full shadow-lg lg:hidden z-50"
->
+              className="fixed bottom-5 right-5 bg-green-600 text-white p-4 rounded-full shadow-lg lg:hidden z-50 relative"
+            >
               🛒
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-white text-black text-xs font-bold px-1.5 py-0.5 rounded-full shadow">
+                  {cartItems.length}
+                </span>
+              )}
             </button>
+
             {showCartMobile && (
               <div className="fixed inset-0 z-40 flex justify-end bg-black/40 lg:hidden">
                 <div className="w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
