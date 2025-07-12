@@ -319,7 +319,7 @@ export default function Page() {
 
       {/* Columna del carrito */}
 {!showHistory && !showProductTable && confirmedStoreName && (
-  <div className="fixed top-24 right-4 w-[240px] max-h-[80vh] overflow-y-auto bg-white/90 border border-gray-300 rounded-xl shadow-xl p-4 z-40 hidden lg:block">
+    <div className="fixed top-24 right-4 w-[240px] ... block lg:block">
     <Cart cart={cartItems} onClear={() => setCartItems([])} />
   </div>
 )}
