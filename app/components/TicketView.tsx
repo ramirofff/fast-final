@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Sale } from '../page';
+import { Sale } from '../types';
 
 interface TicketViewProps {
   sale: Sale;
