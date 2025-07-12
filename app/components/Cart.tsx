@@ -1,3 +1,4 @@
+// app/components/Cart.tsx
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -23,63 +24,61 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   const [showSimulatedQR, setShowSimulatedQR] = useState(false);
   const [simulatedCheckoutUrl, setSimulatedCheckoutUrl] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentStarted, setPaymentStarted] = useState(false);
   const paymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const numericDiscount = parseFloat(discount) || 0;
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  ) - numericDiscount;
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) - numericDiscount;
 
   useEffect(() => {
     if (cart.length === 0) {
-      resetState();
+      setDiscount('');
+      setShowReceipt(false);
+      setShowSimulatedQR(false);
+      setIsProcessingPayment(false);
+      setPaymentStarted(false);
     }
   }, [cart]);
 
-  const resetState = () => {
-    setDiscount('');
-    setShowReceipt(false);
-    setShowSimulatedQR(false);
-    setIsProcessingPayment(false);
-    setSimulatedCheckoutUrl('');
-    if (paymentTimeoutRef.current) {
-      clearTimeout(paymentTimeoutRef.current);
+  useEffect(() => {
+    if (paymentStarted && showSimulatedQR && !isProcessingPayment) {
+      setIsProcessingPayment(true);
+      paymentTimeoutRef.current = setTimeout(() => {
+        const sale = {
+          timestamp: new Date().toISOString(),
+          items: cart.flatMap(item =>
+            Array(item.quantity).fill({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              image: item.image,
+              category: item.category,
+            })
+          ),
+          total,
+          discount: numericDiscount,
+        };
+
+        const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
+        localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
+        setShowReceipt(true);
+        setShowSimulatedQR(false);
+        setIsProcessingPayment(false);
+        setPaymentStarted(false);
+        onConfirm(sale);
+        onClear();
+      }, 3000);
     }
-  };
+    return () => {
+      if (paymentTimeoutRef.current) clearTimeout(paymentTimeoutRef.current);
+    };
+  }, [paymentStarted, showSimulatedQR, isProcessingPayment, cart, total, numericDiscount]);
 
   const simulateStripePayment = () => {
-    if (isProcessingPayment) return;
-
-    setIsProcessingPayment(true);
-    setSimulatedCheckoutUrl('https://fake-stripe-checkout.com/session/123456');
+    setSimulatedCheckoutUrl("https://fake-stripe-checkout.com/session/123456");
     setShowSimulatedQR(true);
-
-    paymentTimeoutRef.current = setTimeout(() => {
-      const sale = {
-        timestamp: new Date().toISOString(),
-        items: cart.flatMap(item =>
-          Array(item.quantity).fill({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            image: item.image,
-            category: item.category,
-          })
-        ),
-        total,
-        discount: numericDiscount,
-      };
-
-      const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-      localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
-      setShowReceipt(true);
-      setShowSimulatedQR(false);
-      setIsProcessingPayment(false);
-      onConfirm(sale);
-      onClear();
-    }, 3000);
+    setPaymentStarted(true);
   };
 
   const handlePrint = () => {
