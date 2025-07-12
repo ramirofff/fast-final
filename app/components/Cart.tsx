@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -32,12 +33,18 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   ) - numericDiscount;
 
   useEffect(() => {
-    if (cart.length === 0) {
-      setDiscount('');
-      setShowReceipt(false);
-      setShowSimulatedQR(false);
+    setShowSimulatedQR(false); // <- Asegura que no arranque en true en móvil
+  }, []);
+
+  useEffect(() => {
+    setShowReceipt(false);
+    setShowSimulatedQR(false);
+    setIsProcessingPayment(false);
+    if (paymentTimeoutRef.current) {
+      clearTimeout(paymentTimeoutRef.current);
+      paymentTimeoutRef.current = null;
     }
-  }, [cart]);
+  }, [cart.length]);
 
   useEffect(() => {
     return () => {
