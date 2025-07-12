@@ -69,6 +69,34 @@ export default function Page() {
       localStorage.setItem('confirmedStoreName', storeName);
     }
   };
+const handleDeleteCategory = (categoryToDelete: string) => {
+    if (categoryToDelete === 'Sin categoría') return;
+
+    const updatedCategories = categories.filter(cat => cat !== categoryToDelete);
+    setCategories(updatedCategories);
+    localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
+    const updatedProducts = products.map(p =>
+      p.category === categoryToDelete ? { ...p, category: 'Sin categoría' } : p
+    );
+    setProducts(updatedProducts);
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+  };
+
+  const handleEditCategory = (oldCat: string, newCat: string) => {
+    if (oldCat === 'Sin categoría' || !newCat.trim()) return;
+    const updatedCategories = categories.map(cat => (cat === oldCat ? newCat : cat));
+    setCategories(updatedCategories);
+    localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
+    const updatedProducts = products.map(p =>
+      p.category === oldCat ? { ...p, category: newCat } : p
+    );
+    setProducts(updatedProducts);
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+  };
+
+
 
   const totalToday = salesToday.reduce((acc, sale) => acc + sale.total, 0);
 
@@ -192,8 +220,8 @@ export default function Page() {
                   categories={categories}
                   activeCategory={activeCategory}
                   setActiveCategory={setActiveCategory}
-                  onDeleteCategory={() => {}}
-                  onEditCategory={() => {}}
+                  onDeleteCategory={handleDeleteCategory}
+                  onEditCategory={handleEditCategory}
                 />
               </div>
               <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
