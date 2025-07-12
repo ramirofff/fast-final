@@ -12,6 +12,10 @@ interface ProductListTableProps {
   categories: string[];
   setProducts: (products: Product[]) => void;
   setEditingProductId: (id: string | null) => void;
+  onDeleteCategory: (cat: string) => void;
+  onEditCategory: (oldCat: string, newCat: string) => void;
+  onUpdateProductCategory: (id: string, newCategory: string) => void;
+  onOpenCategoryChange: (id: string) => void;
 }
 
 export default function ProductListTable({
@@ -25,6 +29,10 @@ export default function ProductListTable({
   categories,
   setProducts,
   setEditingProductId,
+  onDeleteCategory,
+  onEditCategory,
+  onUpdateProductCategory,
+  onOpenCategoryChange,
 }: ProductListTableProps) {
   const [editingField, setEditingField] = useState<'name' | 'category' | 'price' | null>(null);
   const [editingName, setEditingName] = useState<string>('');
@@ -66,7 +74,7 @@ export default function ProductListTable({
     product.name.toLowerCase().includes(search.toLowerCase())
   );
 
-    return (
+  return (
     <div className="space-y-4">
       <input
         type="text"
