@@ -358,7 +358,7 @@ return (
 
           {showCartMobile && (
             <div className="fixed inset-0 z-40 flex justify-end bg-black/40 lg:hidden">
-              <div className="w-full sm:w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
+              <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
                 <button
                   onClick={() => setShowCartMobile(false)}
                   className="text-red-500 mb-4 font-semibold"
