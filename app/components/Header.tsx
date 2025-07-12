@@ -1,5 +1,6 @@
 // components/Header.tsx
 import React from 'react';
+import { CheckCircle } from 'lucide-react';
 
 interface Props {
   storeName: string;
@@ -14,26 +15,27 @@ const Header: React.FC<Props> = ({
   confirmedStoreName,
   setConfirmedStoreName,
 }) => (
-  <div>
-    <h1 className="text-4xl font-extrabold mb-4 text-center text-blue-800">Administración de Ventas</h1>
+  <div className="text-center mb-6">
+    <h1 className="text-4xl font-extrabold text-blue-800 mb-2 drop-shadow-sm">Administración de Ventas</h1>
 
     {!confirmedStoreName ? (
-      <div className="mb-4 flex gap-2 items-center justify-center">
+      <div className="flex flex-col sm:flex-row gap-2 items-center justify-center mt-4">
         <input
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
-          className="border p-2 rounded shadow w-full max-w-xs"
+          className="border px-4 py-2 rounded shadow-sm focus:ring-2 focus:ring-blue-400 w-64 text-center"
           placeholder="Nombre del local"
         />
         <button
           onClick={() => setConfirmedStoreName(storeName)}
-          className="bg-green-500 text-white px-3 py-2 rounded shadow"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow flex items-center gap-2"
         >
-          ✓
+          <CheckCircle size={18} />
+          Confirmar
         </button>
       </div>
     ) : (
-      <h2 className="text-3xl font-bold text-center mb-4 text-gray-800">{confirmedStoreName}</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mt-2">{confirmedStoreName}</h2>
     )}
   </div>
 );
