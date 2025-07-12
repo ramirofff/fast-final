@@ -270,7 +270,7 @@ export default function Page() {
         </div>
 
         {!showHistory && !showProductTable && confirmedStoreName && (
-          <div className="hidden xl:block fixed top-24 right-4 w-[260px]">
+          <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
            <Cart
               cart={cartItems}
               onClear={() => setCartItems([])}
@@ -290,11 +290,11 @@ export default function Page() {
             <button
               onClick={() => setShowCartMobile(true)}
               className="fixed bottom-5 right-5 bg-green-600 text-white p-4 rounded-full shadow-lg lg:hidden z-50"
-            >
+>
               🛒
             </button>
             {showCartMobile && (
-              <div className="fixed inset-0 z-40 flex justify-end bg-black/40 xl:hidden">
+              <div className="fixed inset-0 z-40 flex justify-end bg-black/40 lg:hidden">
                 <div className="w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
                   <button
                     onClick={() => setShowCartMobile(false)}
