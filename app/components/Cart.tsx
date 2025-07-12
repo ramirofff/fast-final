@@ -18,23 +18,19 @@ interface CartProps {
 }
 
 export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: CartProps) {
-  const [discount, setDiscount] = useState('');
+  const [discount, setDiscount] = useState<string>('');
   const [showReceipt, setShowReceipt] = useState(false);
   const [showSimulatedQR, setShowSimulatedQR] = useState(false);
   const [simulatedCheckoutUrl, setSimulatedCheckoutUrl] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const paymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const numericDiscount = parseFloat(discount) || 0;
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) - numericDiscount;
 
-  useEffect(() => {
-    return () => {
-      if (paymentTimeoutRef.current) {
-        clearTimeout(paymentTimeoutRef.current);
-      }
-    };
-  }, []);
+  const total = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  ) - numericDiscount;
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -46,14 +42,17 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
     setDiscount('');
     setShowReceipt(false);
     setShowSimulatedQR(false);
-    setIsProcessing(false);
+    setIsProcessingPayment(false);
     setSimulatedCheckoutUrl('');
+    if (paymentTimeoutRef.current) {
+      clearTimeout(paymentTimeoutRef.current);
+    }
   };
 
   const simulateStripePayment = () => {
-    if (isProcessing) return;
+    if (isProcessingPayment) return;
 
-    setIsProcessing(true);
+    setIsProcessingPayment(true);
     setSimulatedCheckoutUrl('https://fake-stripe-checkout.com/session/123456');
     setShowSimulatedQR(true);
 
@@ -75,11 +74,9 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
 
       const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
       localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
-
       setShowReceipt(true);
       setShowSimulatedQR(false);
-      setIsProcessing(false);
-
+      setIsProcessingPayment(false);
       onConfirm(sale);
       onClear();
     }, 3000);
@@ -112,7 +109,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
             <input
               type="number"
               value={discount}
-              onChange={(e) => setDiscount(e.target.value)}
+              onChange={e => setDiscount(e.target.value)}
               className="border rounded px-2 py-1 text-sm w-full"
               placeholder="Ingrese descuento manual"
             />
@@ -126,7 +123,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
             <button
               onClick={simulateStripePayment}
               className="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm w-full"
-              disabled={isProcessing}
+              disabled={isProcessingPayment}
             >
               Pagar con QR
             </button>
@@ -154,7 +151,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
           <button
             onClick={onClear}
             className="mt-2 bg-red-400 hover:bg-red-500 text-white px-3 py-1 rounded text-sm w-full"
-            disabled={isProcessing}
+            disabled={isProcessingPayment}
           >
             Vaciar carrito
           </button>
