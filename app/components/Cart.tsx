@@ -27,24 +27,20 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
 
   const numericDiscount = parseFloat(discount) || 0;
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  ) - numericDiscount;
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) - numericDiscount;
 
   useEffect(() => {
     if (cart.length === 0) {
       setDiscount('');
       setShowReceipt(false);
       setShowSimulatedQR(false);
+      setIsProcessingPayment(false);
     }
   }, [cart]);
 
   useEffect(() => {
     return () => {
-      if (paymentTimeoutRef.current) {
-        clearTimeout(paymentTimeoutRef.current);
-      }
+      if (paymentTimeoutRef.current) clearTimeout(paymentTimeoutRef.current);
     };
   }, []);
 
@@ -92,7 +88,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
       ) : (
         <>
           <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {cart.map((item) => (
+            {cart.map((item, index) => (
               <CartItemRow
                 key={item.id}
                 item={item}
