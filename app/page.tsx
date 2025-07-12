@@ -319,30 +319,86 @@ return (
         )}
       </div>
 
-      {!showHistory && !showProductTable && confirmedStoreName && (
-        <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
-          <Cart
-            cart={cartItems}
-            onClear={() => setCartItems([])}
-            onUpdateQuantity={(id, quantity) => {
-              if (quantity <= 0) {
-                setCartItems(prev => prev.filter(item => item.id !== id));
-              } else {
-                setCartItems(prev =>
-                  prev.map(item =>
-                    item.id === id ? { ...item, quantity } : item
-                  )
-                );
-              }
-            }}
-            onConfirm={(sale) => {
-              setSelectedSale(sale);
-              setShowHistory(false);
-              setShowProductTable(false);
-            }}
-          />
-        </div>
-      )}
+{/* Carrito fijo para escritorio */}
+{!showHistory && !showProductTable && confirmedStoreName && (
+  <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
+    <Cart
+      cart={cartItems}
+      onClear={() => setCartItems([])}
+      onUpdateQuantity={(id, quantity) => {
+        if (quantity <= 0) {
+          setCartItems(prev => prev.filter(item => item.id !== id));
+        } else {
+          setCartItems(prev =>
+            prev.map(item =>
+              item.id === id ? { ...item, quantity } : item
+            )
+          );
+        }
+      }}
+      onConfirm={(sale) => {
+        setSelectedSale(sale);
+        setShowHistory(false);
+        setShowProductTable(false);
+      }}
+    />
+  </div>
+)}
+
+
+{!showHistory && !showProductTable && confirmedStoreName && (
+  <button
+    onClick={() => setShowCartMobile(true)}
+    className="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 p-2 rounded-full shadow-lg lg:hidden z-50 flex items-center justify-center"
+  >
+    🛒
+    {cartItems.length > 0 && (
+      <span className="absolute -top-1 -right-1 bg-white text-black text-xs font-bold px-1.5 py-0.5 rounded-full shadow">
+        {cartItems.length}
+      </span>
+    )}
+  </button>
+)}
+
+
+<div
+  className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ${
+    showCartMobile ? 'translate-x-0' : 'translate-x-full'
+  } flex justify-end bg-black/40`}
+>
+  <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
+    <button
+      onClick={() => setShowCartMobile(false)}
+      className="text-red-500 mb-4 font-semibold"
+    >
+      ✖ Cerrar
+    </button>
+    <Cart
+      key="mobile"
+      cart={cartItems}
+      onClear={() => setCartItems([])}
+      onUpdateQuantity={(id, quantity) => {
+        if (quantity <= 0) {
+          setCartItems(prev => prev.filter(item => item.id !== id));
+        } else {
+          setCartItems(prev =>
+            prev.map(item =>
+              item.id === id ? { ...item, quantity } : item
+            )
+          );
+        }
+      }}
+      onConfirm={(sale) => {
+        setSelectedSale(sale);
+        setShowHistory(false);
+        setShowProductTable(false);
+        // Esperá unos ms antes de cerrar el panel para asegurar la ejecución
+        setTimeout(() => setShowCartMobile(false), 500);
+      }}
+    />
+  </div>
+</div>
+
 
       {!showHistory && !showProductTable && confirmedStoreName && (
         <>
