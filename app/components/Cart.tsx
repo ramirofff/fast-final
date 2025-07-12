@@ -1,9 +1,9 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, CartItem } from '../types';
 import QRCode from 'react-qr-code';
+import CartItemRow from './CartItemRow';
 
 interface CartProps {
   cart: CartItem[];
@@ -27,7 +27,10 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
 
   const numericDiscount = parseFloat(discount) || 0;
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) - numericDiscount;
+  const total = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  ) - numericDiscount;
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -89,55 +92,13 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
       ) : (
         <>
           <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {cart.map((item, index) => {
-              const [localQuantity, setLocalQuantity] = useState(item.quantity.toString());
-              useEffect(() => {
-                setLocalQuantity(item.quantity.toString());
-              }, [item.quantity]);
-              return (
-                <li key={index} className="flex items-center gap-2 border-b pb-1">
-                  {item.image && (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="text-sm">{item.name}</p>
-                    <p className="text-green-600 font-semibold text-sm">
-                      USD ${item.price.toFixed(2)} x {item.quantity}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <input
-                        type="number"
-                        min="1"
-                        value={localQuantity}
-                        onChange={(e) => {
-                          setLocalQuantity(e.target.value);
-                        }}
-                        onBlur={() => {
-                          const quantity = parseInt(localQuantity);
-                          if (!isNaN(quantity) && quantity > 0) {
-                            onUpdateQuantity(item.id, quantity);
-                          } else {
-                            setLocalQuantity(item.quantity.toString());
-                          }
-                        }}
-                        className="border rounded px-2 py-1 text-sm w-16"
-                      />
-                      <button
-                        onClick={() => onUpdateQuantity(item.id, 0)}
-                        className="text-red-500 text-sm hover:text-red-700"
-                        title="Eliminar producto"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            {cart.map((item) => (
+              <CartItemRow
+                key={item.id}
+                item={item}
+                onUpdateQuantity={onUpdateQuantity}
+              />
+            ))}
           </ul>
 
           <div className="mt-2">
