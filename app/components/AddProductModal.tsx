@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Product } from '../page';
+import { Product } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AddProductModalProps {
