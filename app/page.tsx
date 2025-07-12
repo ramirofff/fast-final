@@ -103,6 +103,7 @@ export default function Page() {
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
+
 return (
   <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
     <div className="fixed top-4 right-4 flex gap-3 z-50">
@@ -142,58 +143,66 @@ return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
       <div className="space-y-4">
 
-        {/* Mostrar tabla editable */}
         {showProductTable && (
-          <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
-            <ProductListTable
-              products={products}
-              onDelete={(id) => {
-                const updated = products.filter(p => p.id !== id);
-                setProducts(updated);
-                localStorage.setItem('products', JSON.stringify(updated));
-              }}
-              onStartEditPrice={(id, price) => {
-                setEditingProductId(id);
-                setEditingPrice(price.toString());
-              }}
-              editingProductId={editingProductId}
-              editingPrice={editingPrice}
-              setEditingPrice={setEditingPrice}
-              onApplyPriceUpdate={() => {
-                const newPrice = parseFloat(editingPrice);
-                if (isNaN(newPrice)) return;
-                const updated = products.map(p =>
-                  p.id === editingProductId ? { ...p, price: newPrice } : p
-                );
-                setProducts(updated);
-                localStorage.setItem('products', JSON.stringify(updated));
+          <>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4"
+            >
+              + Agregar nuevo producto
+            </button>
 
-                const updatedCart = cartItems.map(p =>
-                  p.id === editingProductId ? { ...p, price: newPrice } : p
-                );
-                setCartItems(updatedCart);
+            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
+              <ProductListTable
+                products={products}
+                onDelete={(id) => {
+                  const updated = products.filter(p => p.id !== id);
+                  setProducts(updated);
+                  localStorage.setItem('products', JSON.stringify(updated));
+                }}
+                onStartEditPrice={(id, price) => {
+                  setEditingProductId(id);
+                  setEditingPrice(price.toString());
+                }}
+                editingProductId={editingProductId}
+                editingPrice={editingPrice}
+                setEditingPrice={setEditingPrice}
+                onApplyPriceUpdate={() => {
+                  const newPrice = parseFloat(editingPrice);
+                  if (isNaN(newPrice)) return;
+                  const updated = products.map(p =>
+                    p.id === editingProductId ? { ...p, price: newPrice } : p
+                  );
+                  setProducts(updated);
+                  localStorage.setItem('products', JSON.stringify(updated));
 
-                setEditingProductId(null);
-                setEditingPrice('');
-              }}
-              categories={categories}
-              setProducts={setProducts}
-              setEditingProductId={setEditingProductId}
-              onDeleteCategory={handleDeleteCategory}
-              onEditCategory={handleEditCategory}
-              onUpdateProductCategory={(id, newCategory) => {
-                const updated = products.map(p =>
-                  p.id === id ? { ...p, category: newCategory } : p
-                );
-                setProducts(updated);
-                localStorage.setItem('products', JSON.stringify(updated));
-              }}
-              onOpenCategoryChange={(id) => {
-                setCategoryProductId(id);
-                setShowCategoryModal(true);
-              }}
-            />
-          </div>
+                  const updatedCart = cartItems.map(p =>
+                    p.id === editingProductId ? { ...p, price: newPrice } : p
+                  );
+                  setCartItems(updatedCart);
+
+                  setEditingProductId(null);
+                  setEditingPrice('');
+                }}
+                categories={categories}
+                setProducts={setProducts}
+                setEditingProductId={setEditingProductId}
+                onDeleteCategory={handleDeleteCategory}
+                onEditCategory={handleEditCategory}
+                onUpdateProductCategory={(id, newCategory) => {
+                  const updated = products.map(p =>
+                    p.id === id ? { ...p, category: newCategory } : p
+                  );
+                  setProducts(updated);
+                  localStorage.setItem('products', JSON.stringify(updated));
+                }}
+                onOpenCategoryChange={(id) => {
+                  setCategoryProductId(id);
+                  setShowCategoryModal(true);
+                }}
+              />
+            </div>
+          </>
         )}
 
         {!showHistory && !showProductTable && (
@@ -325,7 +334,6 @@ return (
                 );
               }
             }}
-
             onConfirm={(sale) => {
               setSelectedSale(sale);
               setShowHistory(false);
@@ -382,6 +390,9 @@ return (
     </div>
   </main>
 );
+
+
+;
 
   ;
 }
