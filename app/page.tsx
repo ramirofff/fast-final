@@ -115,10 +115,6 @@ export default function Page() {
           <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
         </button>
         <button onClick={() => {
-          const allSales = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-          const today = new Date().toISOString().split('T')[0];
-          const filtered = allSales.filter((s: Sale) => s.timestamp.startsWith(today));
-          setSalesToday(filtered);
           setShowHistory(true);
           setShowProductTable(false);
         }} className="hover:scale-110 transition-transform">
@@ -275,7 +271,17 @@ export default function Page() {
 
         {!showHistory && !showProductTable && confirmedStoreName && (
           <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
-            <Cart cart={cartItems} onClear={() => setCartItems([])} />
+           <Cart
+              cart={cartItems}
+              onClear={() => setCartItems([])}
+              onConfirm={(sale) => {
+                setSelectedSale(sale);
+                setShowHistory(false);
+                setShowProductTable(false);
+              }}
+            />
+
+
           </div>
         )}
 
@@ -296,7 +302,17 @@ export default function Page() {
                   >
                     ✖ Cerrar
                   </button>
-                  <Cart cart={cartItems} onClear={() => setCartItems([])} />
+                  <Cart
+                  cart={cartItems}
+                  onClear={() => setCartItems([])}
+                  onConfirm={(sale) => {
+                    setSelectedSale(sale);
+                    setShowHistory(false);
+                    setShowProductTable(false);
+  }}
+/>
+
+
                 </div>
               </div>
             )}

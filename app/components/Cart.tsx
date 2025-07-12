@@ -1,16 +1,16 @@
 'use client';
 
-import { Product } from '../page';
+import { Product, Sale } from '../page';
 import { useEffect, useState } from 'react';
 
 interface CartProps {
   cart: Product[];
   onClear: () => void;
+  onConfirm?: (sale: Sale) => void;
 }
 
-export default function Cart({ cart, onClear }: CartProps) {
+export default function Cart({ cart, onClear, onConfirm }: CartProps) {
   const [discount, setDiscount] = useState<string>('');
-  const [showReceipt, setShowReceipt] = useState(false);
 
   const numericDiscount = parseFloat(discount) || 0;
   const total = cart.reduce((sum, item) => sum + item.price, 0) - numericDiscount;
@@ -18,12 +18,11 @@ export default function Cart({ cart, onClear }: CartProps) {
   useEffect(() => {
     if (cart.length === 0) {
       setDiscount('');
-      setShowReceipt(false);
     }
   }, [cart]);
 
   const handleCheckout = () => {
-    const sale = {
+    const sale: Sale = {
       timestamp: new Date().toISOString(),
       items: cart,
       total,
@@ -32,11 +31,9 @@ export default function Cart({ cart, onClear }: CartProps) {
 
     const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
     localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
-    setShowReceipt(true);
-  };
 
-  const handlePrint = () => {
-    window.print();
+    if (onConfirm) onConfirm(sale); // ✅ muestra el ticket directamente
+    onClear(); // ✅ vacía el carrito después de la compra
   };
 
   return (
@@ -82,23 +79,12 @@ export default function Cart({ cart, onClear }: CartProps) {
             <strong>Total:</strong> USD ${total.toFixed(2)}
           </div>
 
-          {!showReceipt && (
-            <button
-              onClick={handleCheckout}
-              className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm w-full"
-            >
-              Confirmar compra
-            </button>
-          )}
-
-          {showReceipt && (
-            <button
-              onClick={handlePrint}
-              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm w-full"
-            >
-              Imprimir ticket
-            </button>
-          )}
+          <button
+            onClick={handleCheckout}
+            className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm w-full"
+          >
+            Confirmar compra
+          </button>
 
           <button
             onClick={onClear}
