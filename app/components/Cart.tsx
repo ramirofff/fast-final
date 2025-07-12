@@ -1,39 +1,74 @@
 'use client';
 
-import { Product, Sale } from '../page';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Product, CartItem } from '../types';
+import QRCode from 'react-qr-code';
 
 interface CartProps {
-  cart: Product[];
+  cart: CartItem[];
   onClear: () => void;
-  onConfirm?: (sale: Sale) => void;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onConfirm: (sale: {
+    timestamp: string;
+    items: Product[];
+    total: number;
+    discount: number;
+  }) => void;
 }
 
-export default function Cart({ cart, onClear, onConfirm }: CartProps) {
+export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: CartProps) {
   const [discount, setDiscount] = useState<string>('');
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [showSimulatedQR, setShowSimulatedQR] = useState(false);
+  const [simulatedCheckoutUrl, setSimulatedCheckoutUrl] = useState('');
 
   const numericDiscount = parseFloat(discount) || 0;
-  const total = cart.reduce((sum, item) => sum + item.price, 0) - numericDiscount;
+
+  const total = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  ) - numericDiscount;
 
   useEffect(() => {
     if (cart.length === 0) {
       setDiscount('');
+      setShowReceipt(false);
+      setShowSimulatedQR(false);
     }
   }, [cart]);
 
-  const handleCheckout = () => {
-    const sale: Sale = {
-      timestamp: new Date().toISOString(),
-      items: cart,
-      total,
-      discount: numericDiscount,
-    };
+  const simulateStripePayment = () => {
+    setSimulatedCheckoutUrl("https://fake-stripe-checkout.com/session/123456");
+    setShowSimulatedQR(true);
 
-    const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-    localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
+    // Simular confirmación automática de pago después de 3 segundos
+    setTimeout(() => {
+      const sale = {
+        timestamp: new Date().toISOString(),
+        items: cart.flatMap(item =>
+          Array(item.quantity).fill({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            category: item.category,
+          })
+        ),
+        total,
+        discount: numericDiscount,
+      };
 
-    if (onConfirm) onConfirm(sale); // ✅ muestra el ticket directamente
-    onClear(); // ✅ vacía el carrito después de la compra
+      const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
+      localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
+      setShowReceipt(true);
+      setShowSimulatedQR(false);
+      onConfirm(sale);
+      onClear(); // ✅ Vaciar carrito automáticamente luego del pago
+    }, 3000);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -57,8 +92,27 @@ export default function Cart({ cart, onClear, onConfirm }: CartProps) {
                 <div className="flex-1">
                   <p className="text-sm">{item.name}</p>
                   <p className="text-green-600 font-semibold text-sm">
-                    USD ${item.price.toFixed(2)}
+                    USD ${item.price.toFixed(2)} x {item.quantity}
                   </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const quantity = parseInt(e.target.value) || 0;
+                        onUpdateQuantity(item.id, quantity);
+                      }}
+                      className="border rounded px-2 py-1 text-sm w-16"
+                    />
+                    <button
+                      onClick={() => onUpdateQuantity(item.id, 0)}
+                      className="text-red-500 text-sm hover:text-red-700"
+                      title="Eliminar producto"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
@@ -79,12 +133,33 @@ export default function Cart({ cart, onClear, onConfirm }: CartProps) {
             <strong>Total:</strong> USD ${total.toFixed(2)}
           </div>
 
-          <button
-            onClick={handleCheckout}
-            className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm w-full"
-          >
-            Confirmar compra
-          </button>
+          {!showReceipt && !showSimulatedQR && (
+            <button
+              onClick={simulateStripePayment}
+              className="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm w-full"
+            >
+              Pagar con QR
+            </button>
+          )}
+
+          {showSimulatedQR && (
+            <div className="mt-4 space-y-2 text-center">
+              <p className="text-sm">Escaneá este código con tu app de pagos:</p>
+              <div className="mx-auto w-fit bg-white p-2 rounded shadow">
+                <QRCode value={simulatedCheckoutUrl} />
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Esperando confirmación...</p>
+            </div>
+          )}
+
+          {showReceipt && (
+            <button
+              onClick={handlePrint}
+              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm w-full"
+            >
+              Imprimir ticket
+            </button>
+          )}
 
           <button
             onClick={onClear}

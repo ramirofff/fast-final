@@ -1,6 +1,6 @@
 // components/ProductList.tsx
 import React, { useState } from 'react';
-import { Product } from '../page';
+import { Product } from '../types';
 import { Pencil, ShoppingCart } from 'lucide-react';
 
 interface Props {

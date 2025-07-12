@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Product } from '../page';
+import { Product } from '../types';
 
 interface ProductListTableProps {
   products: Product[];

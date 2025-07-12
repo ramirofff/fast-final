@@ -1,9 +1,11 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { Sale } from '../page';
+import { Sale } from '../types'; // ✅ import correcto
 
 interface SalesHistoryProps {
-  salesToday: Sale[]; // ya no se usa, pero lo dejamos por compatibilidad
-  totalToday: number; // lo mismo
+  salesToday: Sale[]; // opcional, ya no se usa
+  totalToday: number; // opcional, ya no se usa
   onBack: () => void;
   onClear: () => void;
   onViewTicket: (sale: Sale) => void;
@@ -107,14 +109,17 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
         <button onClick={onBack} className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">
           Volver
         </button>
-        <button onClick={() => {
-          if (confirm('¿Estás seguro de borrar todo el historial de ventas?')) {
-            onClear();
-            setAllSales([]);
-            setAvailableDates([]);
-            setSelectedDate('');
-          }
-        }} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+        <button
+          onClick={() => {
+            if (confirm('¿Estás seguro de borrar todo el historial de ventas?')) {
+              onClear();
+              setAllSales([]);
+              setAvailableDates([]);
+              setSelectedDate('');
+            }
+          }}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+        >
           Borrar historial
         </button>
       </div>
