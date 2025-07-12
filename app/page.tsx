@@ -1,3 +1,5 @@
+// ✅ Adaptación responsive completa con buscador y recuperación de funcionalidades
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -44,6 +46,7 @@ export default function Page() {
   const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
   const [categoryProductId, setCategoryProductId] = useState<string>('');
   const [showCartMobile, setShowCartMobile] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const savedProducts = localStorage.getItem('products');
@@ -69,7 +72,8 @@ export default function Page() {
       localStorage.setItem('confirmedStoreName', storeName);
     }
   };
-const handleDeleteCategory = (categoryToDelete: string) => {
+
+  const handleDeleteCategory = (categoryToDelete: string) => {
     if (categoryToDelete === 'Sin categoría') return;
 
     const updatedCategories = categories.filter(cat => cat !== categoryToDelete);
@@ -96,44 +100,40 @@ const handleDeleteCategory = (categoryToDelete: string) => {
     localStorage.setItem('products', JSON.stringify(updatedProducts));
   };
 
-
-
   const totalToday = salesToday.reduce((acc, sale) => acc + sale.total, 0);
+
+  const filteredProducts = products.filter(
+    (p) =>
+      (activeCategory === '' || p.category === activeCategory) &&
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
-      {/* Íconos flotantes arriba a la derecha */}
       <div className="fixed top-4 right-4 flex gap-3 z-50">
         <button onClick={() => setShowProductTable(true)} className="hover:scale-110 transition-transform">
           <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
         </button>
-        <button
-          onClick={() => {
-            const allSales = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-            const today = new Date().toISOString().split('T')[0];
-            const filtered = allSales.filter((s: Sale) => s.timestamp.startsWith(today));
-            setSalesToday(filtered);
-            setShowHistory(true);
-            setShowProductTable(false);
-          }}
-          className="hover:scale-110 transition-transform"
-        >
+        <button onClick={() => {
+          const allSales = JSON.parse(localStorage.getItem('salesHistory') || '[]');
+          const today = new Date().toISOString().split('T')[0];
+          const filtered = allSales.filter((s: Sale) => s.timestamp.startsWith(today));
+          setSalesToday(filtered);
+          setShowHistory(true);
+          setShowProductTable(false);
+        }} className="hover:scale-110 transition-transform">
           <Clock size={32} className="text-blue-600 hover:text-blue-700" />
         </button>
-        <button
-          onClick={() => {
-            setShowProductTable(false);
-            setShowHistory(false);
-            setSelectedSale(null);
-          }}
-          className="hover:scale-110 transition-transform"
-        >
+        <button onClick={() => {
+          setShowProductTable(false);
+          setShowHistory(false);
+          setSelectedSale(null);
+        }} className="hover:scale-110 transition-transform">
           <Home size={32} className="text-gray-600 hover:text-black" />
         </button>
       </div>
 
-      {/* Layout general */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 pt-20">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 pt-20">
         <div className="space-y-4">
           {!showHistory && !showProductTable && (
             <Header
@@ -142,6 +142,41 @@ const handleDeleteCategory = (categoryToDelete: string) => {
               confirmedStoreName={confirmedStoreName}
               setConfirmedStoreName={handleConfirmStoreName}
             />
+          )}
+
+          {!showHistory && !showProductTable && confirmedStoreName && (
+            <>
+              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
+                <CategorySelector
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                  onEditCategory={handleEditCategory}
+                />
+              </div>
+              <div className="p-2">
+                <input
+                  type="text"
+                  placeholder="Buscar productos..."
+                  className="w-full p-2 border rounded shadow-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
+                <ProductList
+                  products={filteredProducts}
+                  onAddToCart={addToCart}
+                  onDelete={() => {}}
+                  onStartEditPrice={() => {}}
+                  editingProductId={''}
+                  editingPrice={''}
+                  setEditingPrice={() => {}}
+                  onApplyPriceUpdate={() => {}}
+                />
+              </div>
+            </>
           )}
 
           {showProductTable && (
@@ -213,34 +248,6 @@ const handleDeleteCategory = (categoryToDelete: string) => {
             </div>
           )}
 
-          {!showHistory && !showProductTable && confirmedStoreName && (
-            <>
-              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
-                <CategorySelector
-                  categories={categories}
-                  activeCategory={activeCategory}
-                  setActiveCategory={setActiveCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                  onEditCategory={handleEditCategory}
-                />
-              </div>
-              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
-                <ProductList
-                  products={products.filter(
-                    p => activeCategory === '' || p.category === activeCategory
-                  )}
-                  onAddToCart={addToCart}
-                  onDelete={() => {}}
-                  onStartEditPrice={() => {}}
-                  editingProductId=""
-                  editingPrice=""
-                  setEditingPrice={() => {}}
-                  onApplyPriceUpdate={() => {}}
-                />
-              </div>
-            </>
-          )}
-
           {showHistory && (
             <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
               <SalesHistory
@@ -266,14 +273,12 @@ const handleDeleteCategory = (categoryToDelete: string) => {
           )}
         </div>
 
-        {/* Carrito lateral (desktop) */}
         {!showHistory && !showProductTable && confirmedStoreName && (
           <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
             <Cart cart={cartItems} onClear={() => setCartItems([])} />
           </div>
         )}
 
-        {/* Botón flotante carrito móvil */}
         {!showHistory && !showProductTable && confirmedStoreName && (
           <>
             <button
