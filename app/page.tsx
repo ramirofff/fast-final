@@ -129,7 +129,7 @@ export default function Page() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 pt-20">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
         <div className="space-y-4">
           {!showHistory && !showProductTable && (
             <Header
@@ -270,7 +270,7 @@ export default function Page() {
         </div>
 
         {!showHistory && !showProductTable && confirmedStoreName && (
-          <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
+          <div className="hidden xl:block fixed top-24 right-4 w-[260px]">
            <Cart
               cart={cartItems}
               onClear={() => setCartItems([])}
@@ -294,7 +294,7 @@ export default function Page() {
               🛒
             </button>
             {showCartMobile && (
-              <div className="fixed inset-0 z-40 flex justify-end bg-black/40 lg:hidden">
+              <div className="fixed inset-0 z-40 flex justify-end bg-black/40 xl:hidden">
                 <div className="w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
                   <button
                     onClick={() => setShowCartMobile(false)}
