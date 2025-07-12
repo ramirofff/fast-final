@@ -103,7 +103,6 @@ export default function Page() {
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-
 return (
   <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
     <div className="fixed top-4 right-4 flex gap-3 z-50">
@@ -359,7 +358,7 @@ return (
 
           {showCartMobile && (
             <div className="fixed inset-0 z-40 flex justify-end bg-black/40 lg:hidden">
-              <div className="w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
+              <div className="w-full sm:w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
                 <button
                   onClick={() => setShowCartMobile(false)}
                   className="text-red-500 mb-4 font-semibold"
@@ -370,16 +369,21 @@ return (
                   cart={cartItems}
                   onClear={() => setCartItems([])}
                   onUpdateQuantity={(id, quantity) => {
-                    setCartItems(prev =>
-                      prev.map(item =>
-                        item.id === id ? { ...item, quantity } : item
-                      )
-                    );
+                    if (quantity <= 0) {
+                      setCartItems(prev => prev.filter(item => item.id !== id));
+                    } else {
+                      setCartItems(prev =>
+                        prev.map(item =>
+                          item.id === id ? { ...item, quantity } : item
+                        )
+                      );
+                    }
                   }}
                   onConfirm={(sale) => {
                     setSelectedSale(sale);
                     setShowHistory(false);
                     setShowProductTable(false);
+                    setShowCartMobile(false);
                   }}
                 />
               </div>
@@ -392,6 +396,7 @@ return (
 );
 
 
+  
 ;
 
   ;
