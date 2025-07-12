@@ -43,6 +43,7 @@ export default function Page() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
   const [categoryProductId, setCategoryProductId] = useState<string>('');
+  const [showCartMobile, setShowCartMobile] = useState(false);
 
   useEffect(() => {
     const savedProducts = localStorage.getItem('products');
@@ -62,120 +63,6 @@ export default function Page() {
     setCartItems([...cartItems, product]);
   };
 
-  const handleAddProduct = (product: Product) => {
-    const updated = [...products, product];
-    setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
-    if (!categories.includes(product.category) && product.category !== 'Sin categoría') {
-      const updatedCats = [...categories, product.category];
-      setCategories(['Sin categoría', ...updatedCats.filter(c => c !== 'Sin categoría')]);
-      localStorage.setItem('categories', JSON.stringify(['Sin categoría', ...updatedCats.filter(c => c !== 'Sin categoría')]));
-    }
-    setShowAddModal(false);
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    const updated = products.filter(p => p.id !== id);
-    setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
-  };
-
-  const handleStartEditing = (id: string, currentPrice: number) => {
-    setEditingProductId(id);
-    setEditingPrice(currentPrice.toString());
-  };
-
-  const handleApplyPriceUpdate = () => {
-    const newPrice = parseFloat(editingPrice);
-    if (isNaN(newPrice)) return;
-
-    const updated = products.map(p =>
-      p.id === editingProductId ? { ...p, price: newPrice } : p
-    );
-    setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
-
-    const updatedCart = cartItems.map(p =>
-      p.id === editingProductId ? { ...p, price: newPrice } : p
-    );
-    setCartItems(updatedCart);
-
-    setEditingProductId(null);
-    setEditingPrice('');
-  };
-
-  const handleOpenCategoryChange = (id: string) => {
-    setCategoryProductId(id);
-    setShowCategoryModal(true);
-  };
-
-  const handleUpdateProductCategory = (id: string, newCategory: string) => {
-    const updated = products.map(p =>
-      p.id === id ? { ...p, category: newCategory } : p
-    );
-    setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
-
-    if (!categories.includes(newCategory) && newCategory !== 'Sin categoría') {
-      const updatedCats = [...categories, newCategory];
-      setCategories(['Sin categoría', ...updatedCats.filter(c => c !== 'Sin categoría')]);
-      localStorage.setItem('categories', JSON.stringify(['Sin categoría', ...updatedCats.filter(c => c !== 'Sin categoría')]));
-    }
-  };
-
-  const handleDeleteCategory = (categoryToDelete: string) => {
-    if (categoryToDelete === 'Sin categoría') return;
-    const updatedCategories = categories.filter(cat => cat !== categoryToDelete && cat !== 'Sin categoría');
-    setCategories(['Sin categoría', ...updatedCategories]);
-    localStorage.setItem('categories', JSON.stringify(['Sin categoría', ...updatedCategories]));
-
-    const updatedProducts = products.map(p =>
-      p.category === categoryToDelete ? { ...p, category: 'Sin categoría' } : p
-    );
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-
-    if (activeCategory === categoryToDelete) setActiveCategory('Sin categoría');
-  };
-
-  const handleEditCategory = (oldCat: string, newCat: string) => {
-    if (!newCat.trim() || categories.includes(newCat) || oldCat === 'Sin categoría') return;
-
-    const updatedCategories = categories.map(cat =>
-      cat === oldCat ? newCat : cat
-    );
-    setCategories(['Sin categoría', ...updatedCategories.filter(c => c !== 'Sin categoría')]);
-    localStorage.setItem('categories', JSON.stringify(['Sin categoría', ...updatedCategories.filter(c => c !== 'Sin categoría')]));
-
-    const updatedProducts = products.map(p =>
-      p.category === oldCat ? { ...p, category: newCat } : p
-    );
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-
-    if (activeCategory === oldCat) setActiveCategory(newCat);
-  };
-
-  const handleShowHistory = () => {
-    const allSales: Sale[] = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-    const today = new Date().toISOString().split('T')[0];
-    const filtered = allSales.filter(sale => sale.timestamp.startsWith(today));
-    setSalesToday(filtered);
-    setShowHistory(true);
-    setShowProductTable(false);
-  };
-
-  const handleShowProductTable = () => {
-    setShowProductTable(true);
-    setShowHistory(false);
-    setSelectedSale(null);
-  };
-
-  const handleClearHistory = () => {
-    localStorage.removeItem('salesHistory');
-    setSalesToday([]);
-  };
-
   const handleConfirmStoreName = () => {
     if (storeName.trim() !== '') {
       setConfirmedStoreName(storeName);
@@ -186,145 +73,203 @@ export default function Page() {
   const totalToday = salesToday.reduce((acc, sale) => acc + sale.total, 0);
 
   return (
-  <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
-    {/* Íconos flotantes arriba a la derecha */}
-    <div className="fixed top-4 right-4 flex gap-3 z-50">
-      <button onClick={handleShowProductTable} className="hover:scale-110 transition-transform">
-        <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
-      </button>
-      <button onClick={handleShowHistory} className="hover:scale-110 transition-transform">
-        <Clock size={32} className="text-blue-600 hover:text-blue-700" />
-      </button>
-      <button
-        onClick={() => {
-          setShowProductTable(false);
-          setShowHistory(false);
-          setSelectedSale(null);
-        }}
-        className="hover:scale-110 transition-transform"
-      >
-        <Home size={32} className="text-gray-600 hover:text-black" />
-      </button>
-    </div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
+      {/* Íconos flotantes arriba a la derecha */}
+      <div className="fixed top-4 right-4 flex gap-3 z-50">
+        <button onClick={() => setShowProductTable(true)} className="hover:scale-110 transition-transform">
+          <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
+        </button>
+        <button
+          onClick={() => {
+            const allSales = JSON.parse(localStorage.getItem('salesHistory') || '[]');
+            const today = new Date().toISOString().split('T')[0];
+            const filtered = allSales.filter((s: Sale) => s.timestamp.startsWith(today));
+            setSalesToday(filtered);
+            setShowHistory(true);
+            setShowProductTable(false);
+          }}
+          className="hover:scale-110 transition-transform"
+        >
+          <Clock size={32} className="text-blue-600 hover:text-blue-700" />
+        </button>
+        <button
+          onClick={() => {
+            setShowProductTable(false);
+            setShowHistory(false);
+            setSelectedSale(null);
+          }}
+          className="hover:scale-110 transition-transform"
+        >
+          <Home size={32} className="text-gray-600 hover:text-black" />
+        </button>
+      </div>
 
-    {/* Layout general: contenido principal + carrito */}
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 max-w-screen-2xl mx-auto pt-20">
-      {/* Columna principal */}
-      <div className="space-y-4">
-        {!showHistory && !showProductTable && (
-          <Header
-            storeName={storeName}
-            setStoreName={setStoreName}
-            confirmedStoreName={confirmedStoreName}
-            setConfirmedStoreName={handleConfirmStoreName}
-          />
-        )}
-
-        {showProductTable && (
-          <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Lista de productos</h2>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-md shadow transition"
-              >
-                + Producto
-              </button>
-            </div>
-            <ProductListTable
-              products={products}
-              onDelete={handleDeleteProduct}
-              onStartEditPrice={handleStartEditing}
-              editingProductId={editingProductId}
-              editingPrice={editingPrice}
-              setEditingPrice={setEditingPrice}
-              onApplyPriceUpdate={handleApplyPriceUpdate}
-              categories={categories}
-              setProducts={setProducts}
-              setEditingProductId={setEditingProductId}
-              onDeleteCategory={handleDeleteCategory}
-              onEditCategory={handleEditCategory}
-              onUpdateProductCategory={handleUpdateProductCategory}
-              onOpenCategoryChange={handleOpenCategoryChange}
+      {/* Layout general */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 pt-20">
+        <div className="space-y-4">
+          {!showHistory && !showProductTable && (
+            <Header
+              storeName={storeName}
+              setStoreName={setStoreName}
+              confirmedStoreName={confirmedStoreName}
+              setConfirmedStoreName={handleConfirmStoreName}
             />
-          </div>
-        )}
+          )}
 
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
-              <AddProductModal onClose={() => setShowAddModal(false)} onAdd={handleAddProduct} />
-            </div>
-          </div>
-        )}
-
-        {showCategoryModal && (
-          <CategoryChangeModal
-            productId={categoryProductId}
-            categories={categories}
-            onClose={() => setShowCategoryModal(false)}
-            onUpdateCategory={handleUpdateProductCategory}
-          />
-        )}
-
-        {selectedSale && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
-              <TicketView sale={selectedSale} onClose={() => setSelectedSale(null)} />
-            </div>
-          </div>
-        )}
-
-        {showHistory && (
-          <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
-            <SalesHistory
-              salesToday={salesToday}
-              totalToday={totalToday}
-              onBack={() => setShowHistory(false)}
-              onClear={handleClearHistory}
-              onViewTicket={setSelectedSale}
-              localName={confirmedStoreName}
-            />
-          </div>
-        )}
-
-        {!showHistory && !showProductTable && confirmedStoreName && (
-          <>
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
-              <CategorySelector
-                categories={categories}
-                activeCategory={activeCategory}
-                setActiveCategory={setActiveCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onEditCategory={handleEditCategory}
-              />
-            </div>
+          {showProductTable && (
             <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
-              <ProductList
-                products={products.filter(
-                  p => activeCategory === '' || p.category === activeCategory
-                )}
-                onAddToCart={addToCart}
-                onDelete={handleDeleteProduct}
-                onStartEditPrice={handleStartEditing}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Lista de productos</h2>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-md shadow transition"
+                >
+                  + Producto
+                </button>
+              </div>
+              <ProductListTable
+                products={products}
+                onDelete={(id) => {
+                  const updated = products.filter(p => p.id !== id);
+                  setProducts(updated);
+                  localStorage.setItem('products', JSON.stringify(updated));
+                }}
+                onStartEditPrice={(id, price) => {
+                  setEditingProductId(id);
+                  setEditingPrice(price.toString());
+                }}
                 editingProductId={editingProductId}
                 editingPrice={editingPrice}
                 setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={handleApplyPriceUpdate}
+                onApplyPriceUpdate={() => {
+                  const newPrice = parseFloat(editingPrice);
+                  if (isNaN(newPrice)) return;
+                  const updated = products.map(p =>
+                    p.id === editingProductId ? { ...p, price: newPrice } : p
+                  );
+                  setProducts(updated);
+                  localStorage.setItem('products', JSON.stringify(updated));
+                  const updatedCart = cartItems.map(p =>
+                    p.id === editingProductId ? { ...p, price: newPrice } : p
+                  );
+                  setCartItems(updatedCart);
+                  setEditingProductId(null);
+                  setEditingPrice('');
+                }}
+                categories={categories}
+                setProducts={setProducts}
+                setEditingProductId={setEditingProductId}
+                onDeleteCategory={() => {}}
+                onEditCategory={() => {}}
+                onUpdateProductCategory={() => {}}
+                onOpenCategoryChange={() => {}}
               />
             </div>
+          )}
+
+          {showAddModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+                <AddProductModal onClose={() => setShowAddModal(false)} onAdd={(product) => {
+                  const updated = [...products, product];
+                  setProducts(updated);
+                  localStorage.setItem('products', JSON.stringify(updated));
+                  if (!categories.includes(product.category)) {
+                    const updatedCats = [...categories, product.category];
+                    setCategories(updatedCats);
+                    localStorage.setItem('categories', JSON.stringify(updatedCats));
+                  }
+                  setShowAddModal(false);
+                }} />
+              </div>
+            </div>
+          )}
+
+          {!showHistory && !showProductTable && confirmedStoreName && (
+            <>
+              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
+                <CategorySelector
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  onDeleteCategory={() => {}}
+                  onEditCategory={() => {}}
+                />
+              </div>
+              <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
+                <ProductList
+                  products={products.filter(
+                    p => activeCategory === '' || p.category === activeCategory
+                  )}
+                  onAddToCart={addToCart}
+                  onDelete={() => {}}
+                  onStartEditPrice={() => {}}
+                  editingProductId=""
+                  editingPrice=""
+                  setEditingPrice={() => {}}
+                  onApplyPriceUpdate={() => {}}
+                />
+              </div>
+            </>
+          )}
+
+          {showHistory && (
+            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
+              <SalesHistory
+                salesToday={salesToday}
+                totalToday={totalToday}
+                onBack={() => setShowHistory(false)}
+                onClear={() => {
+                  localStorage.removeItem('salesHistory');
+                  setSalesToday([]);
+                }}
+                onViewTicket={setSelectedSale}
+                localName={confirmedStoreName}
+              />
+            </div>
+          )}
+
+          {selectedSale && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+                <TicketView sale={selectedSale} onClose={() => setSelectedSale(null)} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Carrito lateral (desktop) */}
+        {!showHistory && !showProductTable && confirmedStoreName && (
+          <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
+            <Cart cart={cartItems} onClear={() => setCartItems([])} />
+          </div>
+        )}
+
+        {/* Botón flotante carrito móvil */}
+        {!showHistory && !showProductTable && confirmedStoreName && (
+          <>
+            <button
+              onClick={() => setShowCartMobile(true)}
+              className="fixed bottom-5 right-5 bg-green-600 text-white p-4 rounded-full shadow-lg lg:hidden z-50"
+            >
+              🛒
+            </button>
+            {showCartMobile && (
+              <div className="fixed inset-0 z-40 flex justify-end bg-black/40 lg:hidden">
+                <div className="w-4/5 max-w-xs h-full bg-white shadow-lg p-4 overflow-y-auto">
+                  <button
+                    onClick={() => setShowCartMobile(false)}
+                    className="text-red-500 mb-4 font-semibold"
+                  >
+                    ✖ Cerrar
+                  </button>
+                  <Cart cart={cartItems} onClear={() => setCartItems([])} />
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
-
-      {/* Columna del carrito */}
-{!showHistory && !showProductTable && confirmedStoreName && (
-    <div className="fixed top-24 right-4 w-[240px] ... block lg:block">
-    <Cart cart={cartItems} onClear={() => setCartItems([])} />
-  </div>
-)}
-    </div>
-  </main>
-);
-
+    </main>
+  );
 }
