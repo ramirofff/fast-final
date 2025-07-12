@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Product, CartItem } from '../types';
 import QRCode from 'react-qr-code';
 
@@ -21,6 +21,8 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   const [showReceipt, setShowReceipt] = useState(false);
   const [showSimulatedQR, setShowSimulatedQR] = useState(false);
   const [simulatedCheckoutUrl, setSimulatedCheckoutUrl] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const paymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const numericDiscount = parseFloat(discount) || 0;
 
@@ -37,12 +39,20 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
     }
   }, [cart]);
 
+  useEffect(() => {
+    return () => {
+      if (paymentTimeoutRef.current) {
+        clearTimeout(paymentTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const simulateStripePayment = () => {
     setSimulatedCheckoutUrl("https://fake-stripe-checkout.com/session/123456");
     setShowSimulatedQR(true);
+    setIsProcessingPayment(true);
 
-    // Simular confirmación automática de pago después de 3 segundos
-    setTimeout(() => {
+    paymentTimeoutRef.current = setTimeout(() => {
       const sale = {
         timestamp: new Date().toISOString(),
         items: cart.flatMap(item =>
@@ -62,10 +72,10 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
       localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
       setShowReceipt(true);
       setShowSimulatedQR(false);
+      setIsProcessingPayment(false);
       onConfirm(sale);
-      onClear(); // ✅ Vaciar carrito automáticamente luego del pago
+      onClear();
     }, 3000);
-
   };
 
   const handlePrint = () => {
@@ -138,6 +148,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
             <button
               onClick={simulateStripePayment}
               className="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm w-full"
+              disabled={isProcessingPayment}
             >
               Pagar con QR
             </button>
@@ -165,6 +176,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
           <button
             onClick={onClear}
             className="mt-2 bg-red-400 hover:bg-red-500 text-white px-3 py-1 rounded text-sm w-full"
+            disabled={isProcessingPayment}
           >
             Vaciar carrito
           </button>
