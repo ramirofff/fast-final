@@ -33,18 +33,12 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   ) - numericDiscount;
 
   useEffect(() => {
-    setShowSimulatedQR(false); // <- Asegura que no arranque en true en móvil
-  }, []);
-
-  useEffect(() => {
-    setShowReceipt(false);
-    setShowSimulatedQR(false);
-    setIsProcessingPayment(false);
-    if (paymentTimeoutRef.current) {
-      clearTimeout(paymentTimeoutRef.current);
-      paymentTimeoutRef.current = null;
+    if (cart.length === 0) {
+      setDiscount('');
+      setShowReceipt(false);
+      setShowSimulatedQR(false);
     }
-  }, [cart.length]);
+  }, [cart]);
 
   useEffect(() => {
     return () => {
@@ -98,41 +92,12 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
       ) : (
         <>
           <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {cart.map((item, index) => (
-              <li key={index} className="flex items-center gap-2 border-b pb-1">
-                {item.image && (
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-10 h-10 object-cover rounded"
-                  />
-                )}
-                <div className="flex-1">
-                  <p className="text-sm">{item.name}</p>
-                  <p className="text-green-600 font-semibold text-sm">
-                    USD ${item.price.toFixed(2)} x {item.quantity}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="0"
-                      value={item.quantity}
-                      onChange={(e) => {
-                        const quantity = parseInt(e.target.value) || 0;
-                        onUpdateQuantity(item.id, quantity);
-                      }}
-                      className="border rounded px-2 py-1 text-sm w-16"
-                    />
-                    <button
-                      onClick={() => onUpdateQuantity(item.id, 0)}
-                      className="text-red-500 text-sm hover:text-red-700"
-                      title="Eliminar producto"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </li>
+            {cart.map((item) => (
+              <CartItemRow
+                key={item.id}
+                item={item}
+                onUpdateQuantity={onUpdateQuantity}
+              />
             ))}
           </ul>
 
@@ -190,5 +155,63 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
         </>
       )}
     </div>
+  );
+}
+
+function CartItemRow({
+  item,
+  onUpdateQuantity,
+}: {
+  item: CartItem;
+  onUpdateQuantity: (id: string, quantity: number) => void;
+}) {
+  const [localQuantity, setLocalQuantity] = useState(item.quantity.toString());
+
+  useEffect(() => {
+    setLocalQuantity(item.quantity.toString());
+  }, [item.quantity]);
+
+  const handleBlur = () => {
+    const parsed = parseInt(localQuantity);
+    if (!isNaN(parsed) && parsed >= 0) {
+      onUpdateQuantity(item.id, parsed);
+    } else {
+      setLocalQuantity(item.quantity.toString());
+    }
+  };
+
+  return (
+    <li className="flex items-center gap-2 border-b pb-1">
+      {item.image && (
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-10 h-10 object-cover rounded"
+        />
+      )}
+      <div className="flex-1">
+        <p className="text-sm">{item.name}</p>
+        <p className="text-green-600 font-semibold text-sm">
+          USD ${item.price.toFixed(2)} x {item.quantity}
+        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <input
+            type="number"
+            min="0"
+            value={localQuantity}
+            onChange={(e) => setLocalQuantity(e.target.value)}
+            onBlur={handleBlur}
+            className="border rounded px-2 py-1 text-sm w-16"
+          />
+          <button
+            onClick={() => onUpdateQuantity(item.id, 0)}
+            className="text-red-500 text-sm hover:text-red-700"
+            title="Eliminar producto"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+    </li>
   );
 }
