@@ -107,8 +107,8 @@ export default function Page() {
 
 
 return (
-  <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 font-sans relative z-0 max-w-screen-2xl mx-auto transition-all duration-300 ease-in-out">
-    <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in">
+<main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-screen-2xl mx-auto transition-all duration-500 ease-in-out">
+        <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in bg-gray-800/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg">
       <button
         onClick={() => {
           setShowProductTable(true);
@@ -147,14 +147,15 @@ return (
 
         {showProductTable && (
           <>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4"
-            >
-              + Agregar nuevo producto
-            </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
+          >
+            <PlusCircle size={18} /> Agregar producto
+          </button>
 
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
+
+            <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
               <ProductListTable
                 products={products}
                 onDelete={(id) => {
@@ -218,7 +219,7 @@ return (
 
         {!showHistory && !showProductTable && confirmedStoreName && (
           <>
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
+            <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-4 relative z-20">
               <CategorySelector
                 categories={categories}
                 activeCategory={activeCategory}
@@ -230,13 +231,13 @@ return (
             <div className="p-2">
               <input
                 type="text"
-                placeholder="Buscar productos..."
-                className="w-full p-2 border rounded shadow-sm"
+                placeholder="🔍 Buscar productos..."
+                className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 shadow-inner focus:ring-2 focus:ring-green-500 outline-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
+            <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6 relative z-10">
               <ProductList
                 products={filteredProducts}
                 onAddToCart={addToCart}
@@ -296,7 +297,7 @@ return (
         )}
 
         {showHistory && (
-          <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
+          <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
             <SalesHistory
               salesToday={salesToday}
               totalToday={totalToday}
@@ -417,10 +418,13 @@ return (
 
 {/* Carrito móvil, siempre montado y ocultado con clases */}
 <div
-  className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ${
-    showCartMobile ? 'translate-x-0' : 'translate-x-full'
-  } flex justify-end bg-black/40`}
+  className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ease-out transform ${
+    showCartMobile ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+  } flex justify-end bg-black/40 backdrop-blur-sm`}
 >
+
+
+  
   <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
     <button
       onClick={() => setShowCartMobile(false)}
