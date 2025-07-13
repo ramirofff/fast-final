@@ -419,43 +419,49 @@ return (
           </button>
 
 {/* Carrito móvil, siempre montado y ocultado con clases */}
-<div
-  className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ease-out transform ${
-    showCartMobile ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-  } flex justify-end bg-black/40 backdrop-blur-sm animate-slide-in`}
->
-  
-  <div className="w-full max-w-sm h-full bg-gray-900 text-white shadow-lg p-4 overflow-y-auto">
-    <button
-      onClick={() => setShowCartMobile(false)}
-      className="text-red-500 mb-4 font-semibold"
+{!showHistory && !showProductTable && confirmedStoreName && (
+  <div
+    className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ease-out transform ${
+      showCartMobile ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+    } flex justify-end bg-black/40 backdrop-blur-sm`}
+    onClick={() => setShowCartMobile(false)} // Cierra al tocar fuera del carrito
+  >
+    <div
+      className="w-full max-w-sm h-full bg-gray-900 text-white shadow-lg p-4 overflow-y-auto"
+      onClick={(e) => e.stopPropagation()} // Evita que clic dentro lo cierre
     >
-      ✖ Cerrar
-    </button>
-    <Cart
-      key="mobile"
-      cart={cartItems}
-      onClear={() => setCartItems([])}
-      onUpdateQuantity={(id, quantity) => {
-        if (quantity <= 0) {
-          setCartItems(prev => prev.filter(item => item.id !== id));
-        } else {
-          setCartItems(prev =>
-            prev.map(item =>
-              item.id === id ? { ...item, quantity } : item
-            )
-          );
-        }
-      }}
-      onConfirm={(sale) => {
-        setSelectedSale(sale);
-        setShowHistory(false);
-        setShowProductTable(false);
-        setShowCartMobile(false);
-      }}
-    />
+      <button
+        onClick={() => setShowCartMobile(false)}
+        className="text-red-500 mb-4 font-semibold"
+      >
+        ✖ Cerrar
+      </button>
+      <Cart
+        key="mobile"
+        cart={cartItems}
+        onClear={() => setCartItems([])}
+        onUpdateQuantity={(id, quantity) => {
+          if (quantity <= 0) {
+            setCartItems(prev => prev.filter(item => item.id !== id));
+          } else {
+            setCartItems(prev =>
+              prev.map(item =>
+                item.id === id ? { ...item, quantity } : item
+              )
+            );
+          }
+        }}
+        onConfirm={(sale) => {
+          setSelectedSale(sale);
+          setShowHistory(false);
+          setShowProductTable(false);
+          setShowCartMobile(false);
+        }}
+      />
+    </div>
   </div>
-</div>
+)}
+
 
         </>
       )}
