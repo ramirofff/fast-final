@@ -368,7 +368,7 @@ return (
     showCartMobile ? 'translate-x-0' : 'translate-x-full'
   } flex justify-end bg-black/40`}
 >
-  <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
+  <div className="w-full max-w-sm h-full bg-gray-900 text-white shadow-lg p-4 overflow-y-auto">
     <button
       onClick={() => setShowCartMobile(false)}
       className="text-red-500 mb-4 font-semibold"
@@ -418,14 +418,12 @@ return (
 
 {/* Carrito móvil, siempre montado y ocultado con clases */}
 <div
-  className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ease-out transform ${
+  className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ease-out transform ${
     showCartMobile ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-  } flex justify-end bg-black/40 backdrop-blur-sm`}
+  } flex justify-end bg-black/40 backdrop-blur-sm animate-slide-in`}
 >
-
-
   
-  <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
+  <div className="w-full max-w-sm h-full bg-gray-900 text-white shadow-lg p-4 overflow-y-auto">
     <button
       onClick={() => setShowCartMobile(false)}
       className="text-red-500 mb-4 font-semibold"
