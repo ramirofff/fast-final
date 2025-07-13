@@ -32,7 +32,7 @@ const ProductList: React.FC<Props> = ({
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-white p-4 rounded-2xl shadow-md flex flex-col justify-between relative transition hover:shadow-xl"
+            className="bg-gray-900 text-white p-4 rounded-2xl shadow-md flex flex-col justify-between relative transition hover:shadow-xl border border-gray-700"
           >
             <div className="absolute top-2 right-2">
               <button
@@ -43,11 +43,14 @@ const ProductList: React.FC<Props> = ({
               </button>
             </div>
 
-            <img
-              src={product.image || '/no-image.png'}
-              alt={product.name}
-              className="w-full h-28 object-cover mb-2 rounded-xl border border-gray-700"
-            />
+            <div className="w-full h-28 mb-2 rounded-xl border border-gray-700 bg-gray-900 flex items-center justify-center overflow-hidden">
+              <img
+                src={product.image || '/no-image.png'}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
 
             <h3 className="font-semibold text-base">{product.name}</h3>
             <p className="text-xs text-gray-500 mb-1">{product.category}</p>
