@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+'use client';
+
+import React from 'react';
 import { Sale } from '../types';
 
 interface TicketViewProps {
@@ -77,21 +79,20 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
     printWindow.document.write(html);
     printWindow.document.close();
 
-    // Esperar a que cargue antes de imprimir
     printWindow.onload = () => {
       setTimeout(() => {
         printWindow.focus();
         printWindow.print();
         printWindow.close();
-      }, 300); // Le da tiempo para renderizar antes de imprimir
+      }, 300);
     };
   };
 
   return (
     <div className="text-sm font-mono">
-      <div className="bg-white p-4 border rounded shadow w-full max-w-sm mx-auto">
-        <h2 className="text-center font-bold text-lg mb-2">Ticket de Compra</h2>
-        <p className="text-center mb-4">
+      <div className="bg-gray-900 text-white p-4 border border-gray-700 rounded-xl shadow-lg w-full max-w-sm mx-auto">
+        <h2 className="text-center font-bold text-lg mb-2 text-blue-400">Ticket de Compra</h2>
+        <p className="text-center mb-4 text-gray-300">
           Fecha: {new Date(sale.timestamp).toLocaleDateString()}<br />
           Hora: {new Date(sale.timestamp).toLocaleTimeString()}
         </p>
@@ -111,15 +112,20 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
             ))}
           </tbody>
         </table>
+
         {sale.discount > 0 && (
-          <p className="text-right mb-2">Descuento: -${sale.discount.toFixed(2)}</p>
+          <p className="text-right mb-2 text-red-400">
+            Descuento: -${sale.discount.toFixed(2)}
+          </p>
         )}
-        <p className="text-right font-bold text-lg">Total: ${sale.total.toFixed(2)}</p>
+        <p className="text-right font-bold text-lg text-green-400">
+          Total: ${sale.total.toFixed(2)}
+        </p>
 
         <div className="flex justify-between mt-4 print:hidden">
           <button
             onClick={onClose}
-            className="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded"
+            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
           >
             Cerrar
           </button>

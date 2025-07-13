@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos base */
+@layer base {
+  body {
+    @apply font-sans text-white bg-gray-900;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-white;
+  }
+
+  input, textarea, select {
+    @apply bg-gray-800 text-white border border-gray-600 rounded focus:ring-green-500;
+  }
+
+  button {
+    @apply rounded px-3 py-2 font-medium transition-colors;
+  }
+}
+
 /* Estilos para impresión del ticket */
 @media print {
   body * {
@@ -20,14 +39,10 @@
     width: 100%;
     padding: 20px;
     background: white;
+    color: black;
   }
 
   .print-hidden {
     display: none !important;
   }
-}
-
-/* Fuente base general */
-body {
-  @apply font-sans text-gray-800;
 }

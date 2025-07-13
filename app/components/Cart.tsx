@@ -1,10 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, CartItem } from '../types';
 import QRCode from 'react-qr-code';
 import CartItemRow from './CartItemRow';
+import { PercentCircle } from 'lucide-react';
 
 interface CartProps {
   cart: CartItem[];
@@ -27,7 +27,6 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   const paymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const numericDiscount = parseFloat(discount) || 0;
-
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) - numericDiscount;
 
   useEffect(() => {
@@ -48,9 +47,9 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   }, []);
 
   const simulateStripePayment = () => {
-    if (isProcessingPayment) return;
+    if (isProcessingPayment || total <= 0) return;
 
-    setSimulatedCheckoutUrl("https://fake-stripe-checkout.com/session/123456");
+    setSimulatedCheckoutUrl('https://fake-stripe-checkout.com/session/123456');
     setShowSimulatedQR(true);
     setIsProcessingPayment(true);
 
@@ -85,15 +84,15 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   };
 
   return (
-    <div className="flex flex-col gap-2 max-w-[260px] w-full">
-      <h3 className="text-lg font-bold mb-2">Carrito</h3>
+    <div className="flex flex-col gap-3 max-w-[280px] w-full text-white bg-gray-800 p-4 rounded-lg shadow-md animate-fade-in">
+      <h3 className="text-lg font-bold mb-1 border-b pb-1 border-gray-600">Carrito</h3>
 
       {cart.length === 0 ? (
-        <p className="text-sm">No hay productos en el carrito.</p>
+        <p className="text-sm text-gray-300">No hay productos en el carrito.</p>
       ) : (
         <>
           <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {cart.map((item) => (
+            {cart.map(item => (
               <CartItemRow
                 key={item.id}
                 item={item}
@@ -102,28 +101,30 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
             ))}
           </ul>
 
-          <div className="mt-2">
-            <label className="block text-xs">Descuento:</label>
+          <div className="mt-2 relative">
+            <label className="block text-xs text-gray-300 mb-1 flex items-center gap-1">
+              <PercentCircle size={14} className="text-yellow-400" /> Descuento:
+            </label>
             <input
               type="number"
               value={discount}
               onChange={e => setDiscount(e.target.value)}
-              className="border rounded px-2 py-1 text-sm w-full"
+              className="w-full px-2 py-1 text-sm bg-gray-700 text-white border border-gray-500 rounded"
               placeholder="Ingrese descuento manual"
             />
           </div>
 
-          <div className="mt-2 text-sm">
-            <strong>Total:</strong> USD ${total.toFixed(2)}
+          <div className="mt-2 text-sm font-semibold">
+            Total: <span className={`font-bold ${total <= 0 ? 'text-red-400' : 'text-green-400'}`}>USD ${total.toFixed(2)}</span>
           </div>
 
           {!showReceipt && !showSimulatedQR && (
             <button
               onClick={simulateStripePayment}
-              className="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm w-full"
-              disabled={isProcessingPayment}
+              className={`mt-2 text-white px-3 py-2 rounded text-sm w-full transition font-semibold ${total <= 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'}`}
+              disabled={isProcessingPayment || total <= 0}
             >
-              Pagar con QR
+              {total <= 0 ? 'Total inválido' : 'Pagar con QR'}
             </button>
           )}
 
@@ -133,14 +134,14 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
               <div className="mx-auto w-fit bg-white p-2 rounded shadow">
                 <QRCode value={simulatedCheckoutUrl} />
               </div>
-              <p className="text-xs text-gray-500 mt-2">Esperando confirmación...</p>
+              <p className="text-xs text-gray-400 mt-2">Esperando confirmación...</p>
             </div>
           )}
 
           {showReceipt && (
             <button
               onClick={handlePrint}
-              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm w-full"
+              className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm w-full"
             >
               Imprimir ticket
             </button>
@@ -148,7 +149,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
 
           <button
             onClick={onClear}
-            className="mt-2 bg-red-400 hover:bg-red-500 text-white px-3 py-1 rounded text-sm w-full"
+            className="mt-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm w-full"
             disabled={isProcessingPayment}
           >
             Vaciar carrito

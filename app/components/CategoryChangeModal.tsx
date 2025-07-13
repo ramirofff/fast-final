@@ -1,4 +1,3 @@
-// app/components/CategoryChangeModal.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -14,44 +13,57 @@ const CategoryChangeModal: React.FC<Props> = ({
   productId,
   categories,
   onClose,
-  onUpdateCategory
+  onUpdateCategory,
 }) => {
   const [newCategory, setNewCategory] = useState('');
 
   const handleConfirm = () => {
-    if (!newCategory.trim()) return;
-    onUpdateCategory(productId, newCategory.trim());
+    const trimmed = newCategory.trim();
+    if (!trimmed) return;
+    onUpdateCategory(productId, trimmed);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm relative">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+      <div className="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-sm text-white">
         <h2 className="text-lg font-semibold mb-4">Cambiar categoría</h2>
+
+        {/* Selector existente */}
         <select
           value={newCategory}
-          onChange={e => setNewCategory(e.target.value)}
-          className="w-full mb-3 p-2 border rounded"
+          onChange={(e) => setNewCategory(e.target.value)}
+          className="w-full mb-3 p-2 rounded bg-gray-800 border border-gray-600 text-white"
         >
-          <option value="" disabled>Seleccionar categoría</option>
-          {categories.filter(c => c !== 'Sin categoría').map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
+          <option value="" disabled>
+            Seleccionar categoría
+          </option>
+          {categories.filter((c) => c !== 'Sin categoría').map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
           ))}
         </select>
 
+        {/* Nueva categoría */}
         <input
           type="text"
           placeholder="O crear nueva categoría"
           value={newCategory}
-          onChange={e => setNewCategory(e.target.value)}
-          className="w-full p-2 mb-4 border rounded"
+          onChange={(e) => setNewCategory(e.target.value)}
+          className="w-full p-2 mb-4 rounded bg-gray-800 border border-gray-600 text-white placeholder-gray-400"
         />
 
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="text-gray-600 px-4 py-1">Cancelar</button>
+          <button
+            onClick={onClose}
+            className="px-4 py-1 text-sm bg-gray-700 text-gray-200 rounded hover:bg-gray-600"
+          >
+            Cancelar
+          </button>
           <button
             onClick={handleConfirm}
-            className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+            className="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Confirmar
           </button>

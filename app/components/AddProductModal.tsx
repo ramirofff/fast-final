@@ -23,7 +23,7 @@ export default function AddProductModal({ onAdd, onClose }: AddProductModalProps
     const reader = new FileReader();
     reader.onloadend = () => {
       setImageFileBase64(reader.result as string);
-      setImageUrl(''); // Limpiamos la URL si se subió imagen
+      setImageUrl('');
     };
     reader.readAsDataURL(file);
   };
@@ -43,67 +43,72 @@ export default function AddProductModal({ onAdd, onClose }: AddProductModalProps
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Agregar producto</h2>
+    <div className="space-y-4 bg-gray-900 text-white p-6 rounded-xl shadow-lg">
+      <h2 className="text-xl font-bold text-center">Agregar producto</h2>
+
       <input
         type="text"
         placeholder="Nombre"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full border rounded px-3 py-2"
+        className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400"
       />
+
       <input
         type="number"
         placeholder="Precio"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
-        className="w-full border rounded px-3 py-2"
+        className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400"
       />
+
       <input
         type="text"
         placeholder="URL de imagen (opcional)"
         value={imageUrl}
         onChange={(e) => {
           setImageUrl(e.target.value);
-          setImageFileBase64(null); // Si escribe URL, quitamos imagen local
+          setImageFileBase64(null);
         }}
-        className="w-full border rounded px-3 py-2"
+        className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400"
       />
+
       <input
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
-        className="w-full text-sm"
+        className="w-full text-sm bg-gray-800 text-white"
       />
+
       <input
         type="text"
         placeholder="Categoría (opcional)"
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="w-full border rounded px-3 py-2"
+        className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400"
       />
 
       {(imageFileBase64 || imageUrl) && (
         <div className="mt-2">
-          <p className="text-sm text-gray-500">Vista previa:</p>
+          <p className="text-sm text-gray-400">Vista previa:</p>
           <img
             src={imageFileBase64 || imageUrl}
             alt="Vista previa"
-            className="w-24 h-24 object-cover border rounded"
+            className="w-24 h-24 object-cover border rounded border-white"
           />
         </div>
       )}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pt-2">
         <button
           onClick={onClose}
-          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded"
         >
           Cancelar
         </button>
         <button
           onClick={handleAdd}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
         >
           Agregar
         </button>

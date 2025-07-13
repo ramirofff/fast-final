@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Product } from '../types';
 
@@ -81,23 +83,23 @@ export default function ProductListTable({
         placeholder="Buscar producto..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="border px-3 py-2 rounded w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+        className="border px-3 py-2 rounded w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-gray-200 placeholder:text-gray-400"
       />
 
-      <div className="overflow-x-auto bg-white shadow-md rounded-xl">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
+      <div className="overflow-x-auto bg-gray-900 shadow-lg rounded-xl border border-gray-700">
+        <table className="w-full text-sm text-gray-200">
+          <thead className="bg-gray-800 text-gray-300 border-b border-gray-700">
             <tr className="text-left">
-              <th className="p-3 font-medium text-gray-600">Foto</th>
-              <th className="p-3 font-medium text-gray-600">Nombre</th>
-              <th className="p-3 font-medium text-gray-600">Categoría</th>
-              <th className="p-3 font-medium text-gray-600">Precio</th>
-              <th className="p-3 font-medium text-gray-600">Acciones</th>
+              <th className="p-3 font-semibold">Foto</th>
+              <th className="p-3 font-semibold">Nombre</th>
+              <th className="p-3 font-semibold">Categoría</th>
+              <th className="p-3 font-semibold">Precio</th>
+              <th className="p-3 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredProducts.map(product => (
-              <tr key={product.id} className="border-t hover:bg-gray-50">
+              <tr key={product.id} className="border-t border-gray-700 hover:bg-gray-800">
                 <td className="p-3">
                   {product.image && (
                     <img
@@ -114,17 +116,17 @@ export default function ProductListTable({
                         type="text"
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
-                        className="border px-2 py-1 rounded w-28"
+                        className="border px-2 py-1 rounded w-28 bg-gray-800 text-gray-100"
                       />
                       <button
                         onClick={() => handleSaveName(product.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 rounded text-xs"
+                        className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
                       >
                         ✔
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 rounded text-xs"
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
                       >
                         ✖
                       </button>
@@ -132,7 +134,7 @@ export default function ProductListTable({
                   ) : (
                     <span
                       onClick={() => startEdit(product.id, 'name', product.name)}
-                      className="cursor-pointer hover:text-blue-600"
+                      className="cursor-pointer hover:text-blue-400"
                     >
                       ✏️ {product.name}
                     </span>
@@ -144,7 +146,7 @@ export default function ProductListTable({
                       <select
                         value={editingCategory}
                         onChange={(e) => setEditingCategory(e.target.value)}
-                        className="border px-2 py-1 rounded w-28"
+                        className="border px-2 py-1 rounded w-28 bg-gray-800 text-gray-100"
                       >
                         {categories.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -152,13 +154,13 @@ export default function ProductListTable({
                       </select>
                       <button
                         onClick={() => handleSaveCategory(product.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 rounded text-xs"
+                        className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
                       >
                         ✔
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 rounded text-xs"
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
                       >
                         ✖
                       </button>
@@ -166,7 +168,7 @@ export default function ProductListTable({
                   ) : (
                     <span
                       onClick={() => startEdit(product.id, 'category', product.category)}
-                      className="cursor-pointer hover:text-blue-600"
+                      className="cursor-pointer hover:text-blue-400"
                     >
                       ✏️ {product.category}
                     </span>
@@ -179,17 +181,17 @@ export default function ProductListTable({
                         type="number"
                         value={editingPrice}
                         onChange={(e) => setEditingPrice(e.target.value)}
-                        className="border px-2 py-1 rounded w-24"
+                        className="border px-2 py-1 rounded w-24 bg-gray-800 text-gray-100"
                       />
                       <button
                         onClick={onApplyPriceUpdate}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 rounded text-xs"
+                        className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
                       >
                         ✔
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 rounded text-xs"
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
                       >
                         ✖
                       </button>
@@ -197,7 +199,7 @@ export default function ProductListTable({
                   ) : (
                     <span
                       onClick={() => startEdit(product.id, 'price', product.price)}
-                      className="cursor-pointer hover:text-blue-600"
+                      className="cursor-pointer hover:text-blue-400"
                     >
                       ✏️ ${product.price.toFixed(2)}
                     </span>
@@ -206,7 +208,7 @@ export default function ProductListTable({
                 <td className="p-3">
                   <button
                     onClick={() => onDelete(product.id)}
-                    className="text-red-600 hover:text-red-800 text-sm hover:underline"
+                    className="text-red-500 hover:text-red-600 text-sm hover:underline"
                   >
                     🗑 Eliminar
                   </button>

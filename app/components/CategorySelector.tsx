@@ -1,4 +1,3 @@
-// components/CategorySelector.tsx
 'use client';
 import React, { useState, useRef } from 'react';
 
@@ -47,8 +46,8 @@ const CategorySelector: React.FC<Props> = ({
           setActiveCategory('');
           setMenuOpenFor(null);
         }}
-        className={`px-4 py-2 rounded-full border shadow text-sm transition font-semibold ${
-          activeCategory === '' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+        className={`px-4 py-2 rounded-full text-sm transition font-semibold border ${
+          activeCategory === '' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700'
         }`}
       >
         Todas
@@ -66,12 +65,12 @@ const CategorySelector: React.FC<Props> = ({
           <button
             onClick={() => {
               setActiveCategory(cat);
-              if (menuOpenFor !== cat) {
-                setMenuOpenFor(null); // solo cerramos si era otro
-              }
+              if (menuOpenFor !== cat) setMenuOpenFor(null);
             }}
-            className={`px-4 py-2 rounded-full border shadow text-sm transition font-semibold ${
-              activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+            className={`px-4 py-2 rounded-full text-sm font-semibold border transition ${
+              activeCategory === cat
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700'
             }`}
           >
             {cat}
@@ -80,17 +79,17 @@ const CategorySelector: React.FC<Props> = ({
           {/* Menú contextual */}
           {cat !== 'Sin categoría' && cat !== 'Todas' && menuOpenFor === cat && (
             <div
-              className="absolute z-10 top-full mt-1 left-0 bg-white border rounded shadow-lg w-48"
+              className="absolute z-10 top-full mt-1 left-0 bg-gray-900 border border-gray-700 rounded shadow-lg w-56"
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
-              <div className="p-2 border-b text-sm font-medium">Editar categoría</div>
+              <div className="p-2 border-b border-gray-700 text-sm font-medium text-white">Editar categoría</div>
               <div className="flex p-2 gap-1">
                 <input
                   type="text"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
-                  className="border px-2 py-1 rounded w-full text-sm"
+                  className="bg-gray-800 border border-gray-600 px-2 py-1 rounded w-full text-sm text-white placeholder-gray-400"
                 />
                 <button
                   onClick={() => {
@@ -107,13 +106,13 @@ const CategorySelector: React.FC<Props> = ({
                   onDeleteCategory(cat);
                   setMenuOpenFor(null);
                 }}
-                className="text-red-600 hover:bg-red-100 px-4 py-2 w-full text-left text-sm"
+                className="text-red-400 hover:bg-red-900/30 px-4 py-2 w-full text-left text-sm"
               >
                 🗑 Eliminar
               </button>
               <button
                 onClick={() => setMenuOpenFor(null)}
-                className="text-gray-500 hover:text-black px-4 py-2 w-full text-left text-xs"
+                className="text-gray-400 hover:text-white px-4 py-2 w-full text-left text-xs"
               >
                 ✖ Cancelar
               </button>

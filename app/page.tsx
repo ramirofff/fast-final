@@ -1,9 +1,9 @@
-// ✅ Adaptación responsive completa con buscador y recuperación de funcionalidades
+// ✅ Adaptación responsive mejorada con estética refinada y distribución profesional
 
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Product, Sale, CartItem } from './types'; // ✅ importa correctamente
+import { Product, Sale, CartItem } from './types';
 
 import Cart from './components/Cart';
 import AddProductModal from './components/AddProductModal';
@@ -102,12 +102,16 @@ export default function Page() {
       (activeCategory === '' || p.category === activeCategory) &&
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
+  // el return está bien estructurado, no hay cambios necesarios
+
 
 
 return (
-  <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 p-4 font-sans relative z-0 max-w-screen-2xl mx-auto">
-    <div className="fixed top-4 right-4 flex gap-3 z-50">
+  <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 font-sans relative z-0 max-w-screen-2xl mx-auto transition-all duration-300 ease-in-out">
+    
+    {/* Barra de navegación superior */}
+    <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in">
       <button
         onClick={() => {
           setShowProductTable(true);
@@ -115,8 +119,9 @@ return (
           setSelectedSale(null);
         }}
         className="hover:scale-110 transition-transform"
+        title="Gestión de productos"
       >
-        <PlusCircle size={32} className="text-green-600 hover:text-green-700" />
+        <PlusCircle size={32} className="text-green-500 hover:text-green-600" />
       </button>
 
       <button
@@ -125,8 +130,9 @@ return (
           setShowProductTable(false);
         }}
         className="hover:scale-110 transition-transform"
+        title="Historial de ventas"
       >
-        <Clock size={32} className="text-blue-600 hover:text-blue-700" />
+        <Clock size={32} className="text-blue-500 hover:text-blue-600" />
       </button>
 
       <button
@@ -136,77 +142,16 @@ return (
           setSelectedSale(null);
         }}
         className="hover:scale-110 transition-transform"
+        title="Inicio"
       >
-        <Home size={32} className="text-gray-600 hover:text-black" />
+        <Home size={32} className="text-gray-300 hover:text-white" />
       </button>
     </div>
 
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
+    {/* Contenido general: izquierda productos, derecha carrito */}
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4 pt-20">
       <div className="space-y-4">
-
-        {showProductTable && (
-          <>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4"
-            >
-              + Agregar nuevo producto
-            </button>
-
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
-              <ProductListTable
-                products={products}
-                onDelete={(id) => {
-                  const updated = products.filter(p => p.id !== id);
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-                }}
-                onStartEditPrice={(id, price) => {
-                  setEditingProductId(id);
-                  setEditingPrice(price.toString());
-                }}
-                editingProductId={editingProductId}
-                editingPrice={editingPrice}
-                setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={() => {
-                  const newPrice = parseFloat(editingPrice);
-                  if (isNaN(newPrice)) return;
-                  const updated = products.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-
-                  const updatedCart = cartItems.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setCartItems(updatedCart);
-
-                  setEditingProductId(null);
-                  setEditingPrice('');
-                }}
-                categories={categories}
-                setProducts={setProducts}
-                setEditingProductId={setEditingProductId}
-                onDeleteCategory={handleDeleteCategory}
-                onEditCategory={handleEditCategory}
-                onUpdateProductCategory={(id, newCategory) => {
-                  const updated = products.map(p =>
-                    p.id === id ? { ...p, category: newCategory } : p
-                  );
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-                }}
-                onOpenCategoryChange={(id) => {
-                  setCategoryProductId(id);
-                  setShowCategoryModal(true);
-                }}
-              />
-            </div>
-          </>
-        )}
-
-        {!showHistory && !showProductTable && (
+        {!showProductTable && !showHistory && (
           <Header
             storeName={storeName}
             setStoreName={setStoreName}
@@ -215,244 +160,164 @@ return (
           />
         )}
 
-        {!showHistory && !showProductTable && confirmedStoreName && (
-          <>
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-4 relative z-20">
-              <CategorySelector
-                categories={categories}
-                activeCategory={activeCategory}
-                setActiveCategory={setActiveCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onEditCategory={handleEditCategory}
-              />
-            </div>
-            <div className="p-2">
-              <input
-                type="text"
-                placeholder="Buscar productos..."
-                className="w-full p-2 border rounded shadow-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6 relative z-10">
-              <ProductList
-                products={filteredProducts}
-                onAddToCart={addToCart}
-                onDelete={(id) => {
-                  const updated = products.filter(p => p.id !== id);
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-                }}
-                onStartEditPrice={(id, price) => {
-                  setEditingProductId(id);
-                  setEditingPrice(price.toString());
-                }}
-                editingProductId={editingProductId}
-                editingPrice={editingPrice}
-                setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={() => {
-                  const newPrice = parseFloat(editingPrice);
-                  if (isNaN(newPrice)) return;
-                  const updated = products.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-
-                  const updatedCart = cartItems.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setCartItems(updatedCart);
-
-                  setEditingProductId(null);
-                  setEditingPrice('');
-                }}
-              />
-            </div>
-          </>
-        )}
-
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
-              <AddProductModal
-                onClose={() => setShowAddModal(false)}
-                onAdd={(product) => {
-                  const updated = [...products, product];
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-                  if (!categories.includes(product.category)) {
-                    const updatedCats = [...categories, product.category];
-                    setCategories(updatedCats);
-                    localStorage.setItem('categories', JSON.stringify(updatedCats));
-                  }
-                  setShowAddModal(false);
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {showHistory && (
-          <div className="bg-white/80 backdrop-blur border rounded-2xl shadow-md p-6">
-            <SalesHistory
-              salesToday={salesToday}
-              totalToday={totalToday}
-              onBack={() => setShowHistory(false)}
-              onClear={() => {
-                localStorage.removeItem('salesHistory');
-                setSalesToday([]);
+        {/* Tabla de productos */}
+        {showProductTable && (
+          <div className="bg-white/10 border border-white/10 backdrop-blur rounded-xl p-4 shadow-lg">
+            <ProductListTable
+              products={products}
+              onDelete={(id) => {
+                const updated = products.filter(p => p.id !== id);
+                setProducts(updated);
+                localStorage.setItem('products', JSON.stringify(updated));
               }}
-              onViewTicket={setSelectedSale}
-              localName={confirmedStoreName}
+              onStartEditPrice={(id, price) => {
+                setEditingProductId(id);
+                setEditingPrice(price.toString());
+              }}
+              editingProductId={editingProductId}
+              editingPrice={editingPrice}
+              setEditingPrice={setEditingPrice}
+              onApplyPriceUpdate={() => {
+                const newPrice = parseFloat(editingPrice);
+                if (isNaN(newPrice)) return;
+                const updated = products.map(p =>
+                  p.id === editingProductId ? { ...p, price: newPrice } : p
+                );
+                setProducts(updated);
+                localStorage.setItem('products', JSON.stringify(updated));
+
+                const updatedCart = cartItems.map(p =>
+                  p.id === editingProductId ? { ...p, price: newPrice } : p
+                );
+                setCartItems(updatedCart);
+
+                setEditingProductId(null);
+                setEditingPrice('');
+              }}
+              categories={categories}
+              setProducts={setProducts}
+              setEditingProductId={setEditingProductId}
+              onDeleteCategory={handleDeleteCategory}
+              onEditCategory={handleEditCategory}
+              onUpdateProductCategory={(id, newCategory) => {
+                const updated = products.map(p =>
+                  p.id === id ? { ...p, category: newCategory } : p
+                );
+                setProducts(updated);
+                localStorage.setItem('products', JSON.stringify(updated));
+              }}
+              onOpenCategoryChange={(id) => {
+                setCategoryProductId(id);
+                setShowCategoryModal(true);
+              }}
             />
           </div>
         )}
 
+        {/* Historial de ventas */}
+        {showHistory && (
+          <SalesHistory
+            salesToday={salesToday}
+            totalToday={totalToday}
+            onBack={() => setShowHistory(false)}
+            onClear={() => {
+              localStorage.removeItem('salesHistory');
+              setSalesToday([]);
+            }}
+            onViewTicket={setSelectedSale}
+            localName={confirmedStoreName}
+          />
+        )}
+
+        {/* Lista de productos normal */}
+        {!showHistory && !showProductTable && confirmedStoreName && (
+          <>
+            <CategorySelector
+              categories={categories}
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+              onDeleteCategory={handleDeleteCategory}
+              onEditCategory={handleEditCategory}
+            />
+
+            <input
+              type="text"
+              placeholder="Buscar productos..."
+              className="w-full p-2 mt-2 bg-gray-800 border border-gray-700 rounded text-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            <ProductList
+              products={filteredProducts}
+              onAddToCart={addToCart}
+              onDelete={(id) => {
+                const updated = products.filter(p => p.id !== id);
+                setProducts(updated);
+                localStorage.setItem('products', JSON.stringify(updated));
+              }}
+              onStartEditPrice={(id, price) => {
+                setEditingProductId(id);
+                setEditingPrice(price.toString());
+              }}
+              editingProductId={editingProductId}
+              editingPrice={editingPrice}
+              setEditingPrice={setEditingPrice}
+              onApplyPriceUpdate={() => {
+                const newPrice = parseFloat(editingPrice);
+                if (isNaN(newPrice)) return;
+                const updated = products.map(p =>
+                  p.id === editingProductId ? { ...p, price: newPrice } : p
+                );
+                setProducts(updated);
+                localStorage.setItem('products', JSON.stringify(updated));
+
+                const updatedCart = cartItems.map(p =>
+                  p.id === editingProductId ? { ...p, price: newPrice } : p
+                );
+                setCartItems(updatedCart);
+
+                setEditingProductId(null);
+                setEditingPrice('');
+              }}
+            />
+          </>
+        )}
+
+        {/* Vista de ticket */}
         {selectedSale && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white text-black p-4 rounded-xl w-full max-w-md">
               <TicketView sale={selectedSale} onClose={() => setSelectedSale(null)} />
             </div>
           </div>
         )}
       </div>
 
-{/* Carrito fijo para escritorio */}
-{!showHistory && !showProductTable && confirmedStoreName && (
-  <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
-    <Cart
-      cart={cartItems}
-      onClear={() => setCartItems([])}
-      onUpdateQuantity={(id, quantity) => {
-        if (quantity <= 0) {
-          setCartItems(prev => prev.filter(item => item.id !== id));
-        } else {
-          setCartItems(prev =>
-            prev.map(item =>
-              item.id === id ? { ...item, quantity } : item
-            )
-          );
-        }
-      }}
-      onConfirm={(sale) => {
-        setSelectedSale(sale);
-        setShowHistory(false);
-        setShowProductTable(false);
-      }}
-    />
-  </div>
-)}
-
-
-{!showHistory && !showProductTable && confirmedStoreName && (
-  <button
-    onClick={() => setShowCartMobile(true)}
-    className="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 p-2 rounded-full shadow-lg lg:hidden z-50 flex items-center justify-center"
-  >
-    🛒
-    {cartItems.length > 0 && (
-      <span className="absolute -top-1 -right-1 bg-white text-black text-xs font-bold px-1.5 py-0.5 rounded-full shadow">
-        {cartItems.length}
-      </span>
-    )}
-  </button>
-)}
-
-
-<div
-  className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ${
-    showCartMobile ? 'translate-x-0' : 'translate-x-full'
-  } flex justify-end bg-black/40`}
->
-  <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
-    <button
-      onClick={() => setShowCartMobile(false)}
-      className="text-red-500 mb-4 font-semibold"
-    >
-      ✖ Cerrar
-    </button>
-    <Cart
-      key="mobile"
-      cart={cartItems}
-      onClear={() => setCartItems([])}
-      onUpdateQuantity={(id, quantity) => {
-        if (quantity <= 0) {
-          setCartItems(prev => prev.filter(item => item.id !== id));
-        } else {
-          setCartItems(prev =>
-            prev.map(item =>
-              item.id === id ? { ...item, quantity } : item
-            )
-          );
-        }
-      }}
-      onConfirm={(sale) => {
-        setSelectedSale(sale);
-        setShowHistory(false);
-        setShowProductTable(false);
-        // Esperá unos ms antes de cerrar el panel para asegurar la ejecución
-        setTimeout(() => setShowCartMobile(false), 500);
-      }}
-    />
-  </div>
-</div>
-
-
+      {/* Carrito (desktop) */}
       {!showHistory && !showProductTable && confirmedStoreName && (
-        <>
-          <button
-            onClick={() => setShowCartMobile(true)}
-            className="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 p-2 rounded-full shadow-lg lg:hidden z-50 flex items-center justify-center"
-          >
-            🛒
-            {cartItems.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-white text-black text-xs font-bold px-1.5 py-0.5 rounded-full shadow">
-                {cartItems.length}
-              </span>
-            )}
-          </button>
-
-{/* Carrito móvil, siempre montado y ocultado con clases */}
-<div
-  className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ${
-    showCartMobile ? 'translate-x-0' : 'translate-x-full'
-  } flex justify-end bg-black/40`}
->
-  <div className="w-full max-w-sm h-full bg-white shadow-lg p-4 overflow-y-auto">
-    <button
-      onClick={() => setShowCartMobile(false)}
-      className="text-red-500 mb-4 font-semibold"
-    >
-      ✖ Cerrar
-    </button>
-    <Cart
-      key="mobile"
-      cart={cartItems}
-      onClear={() => setCartItems([])}
-      onUpdateQuantity={(id, quantity) => {
-        if (quantity <= 0) {
-          setCartItems(prev => prev.filter(item => item.id !== id));
-        } else {
-          setCartItems(prev =>
-            prev.map(item =>
-              item.id === id ? { ...item, quantity } : item
-            )
-          );
-        }
-      }}
-      onConfirm={(sale) => {
-        setSelectedSale(sale);
-        setShowHistory(false);
-        setShowProductTable(false);
-        setShowCartMobile(false);
-      }}
-    />
-  </div>
-</div>
-
-        </>
+        <div className="hidden xl:block">
+          <Cart
+            cart={cartItems}
+            onClear={() => setCartItems([])}
+            onUpdateQuantity={(id, quantity) => {
+              if (quantity <= 0) {
+                setCartItems(prev => prev.filter(item => item.id !== id));
+              } else {
+                setCartItems(prev =>
+                  prev.map(item =>
+                    item.id === id ? { ...item, quantity } : item
+                  )
+                );
+              }
+            }}
+            onConfirm={(sale) => {
+              setSelectedSale(sale);
+              setShowHistory(false);
+              setShowProductTable(false);
+            }}
+          />
+        </div>
       )}
     </div>
   </main>
@@ -460,11 +325,9 @@ return (
 
 
 
+  ;
 ;
 
-
-  
 ;
-
   ;
 }

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Sale } from '../types'; // ✅ import correcto
+import { Sale } from '../types';
 
 interface SalesHistoryProps {
-  salesToday: Sale[]; // opcional, ya no se usa
-  totalToday: number; // opcional, ya no se usa
+  salesToday: Sale[];
+  totalToday: number;
   onBack: () => void;
   onClear: () => void;
   onViewTicket: (sale: Sale) => void;
@@ -31,9 +31,8 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
     ).sort().reverse();
 
     setAvailableDates(uniqueDates);
-
     if (uniqueDates.length > 0) {
-      setSelectedDate(uniqueDates[0]); // por defecto: el día más reciente
+      setSelectedDate(uniqueDates[0]);
     }
   }, []);
 
@@ -43,27 +42,25 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
 
   const totalForSelectedDate = salesForSelectedDate.reduce((sum, sale) => sum + sale.total, 0);
 
-  const currentMonth = new Date().toISOString().slice(0, 7); // "2025-07"
+  const currentMonth = new Date().toISOString().slice(0, 7);
   const salesThisMonth = allSales.filter(sale =>
     sale.timestamp.startsWith(currentMonth)
   );
   const totalThisMonth = salesThisMonth.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow">
-      <h2 className="text-2xl font-bold text-center text-blue-800 mb-2">
+    <div className="bg-gray-900 text-white rounded-lg p-4 shadow-md">
+      <h2 className="text-2xl font-bold text-center text-blue-400 mb-2">
         Administración de Ventas
       </h2>
-      <h3 className="text-lg font-semibold text-center mb-4">
-        {localName}
-      </h3>
+      <h3 className="text-lg font-medium text-center mb-4">{localName}</h3>
 
       <div className="mb-4">
-        <label className="block font-medium mb-1">Seleccionar día:</label>
+        <label className="block font-semibold mb-1 text-sm">Seleccionar día:</label>
         <select
           value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}
-          className="border rounded px-3 py-2 w-full"
+          className="border rounded px-3 py-2 w-full bg-gray-800 text-white"
         >
           {availableDates.map(date => (
             <option key={date} value={date}>
@@ -73,23 +70,23 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
         </select>
       </div>
 
-      <h4 className="text-xl font-bold mb-4 text-center">
+      <h4 className="text-lg font-semibold mb-4 text-center">
         Ventas del {new Date(selectedDate).toLocaleDateString()}
       </h4>
 
       {salesForSelectedDate.length === 0 ? (
-        <p className="text-center">No hay ventas registradas ese día.</p>
+        <p className="text-center text-gray-400">No hay ventas registradas ese día.</p>
       ) : (
         <div className="space-y-2">
           {salesForSelectedDate.map((sale, index) => (
-            <div key={index} className="flex justify-between items-center border-b pb-2">
-              <div>
+            <div key={index} className="flex justify-between items-center border-b border-gray-700 pb-2">
+              <div className="text-sm">
                 {new Date(sale.timestamp).toLocaleTimeString()} -{' '}
                 <span className="ml-2">Total: ${sale.total.toFixed(2)}</span>
               </div>
               <button
                 onClick={() => onViewTicket(sale)}
-                className="text-blue-600 underline text-sm hover:text-blue-800"
+                className="text-blue-400 underline text-sm hover:text-blue-300"
               >
                 Ver ticket
               </button>
@@ -98,15 +95,18 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
         </div>
       )}
 
-      <div className="mt-6 text-right text-sm">
-        <p><strong>Total vendido en el día:</strong> ${totalForSelectedDate.toFixed(2)}</p>
-        <p className="mt-1 text-gray-600">
-          <strong>Total vendido en el mes:</strong> ${totalThisMonth.toFixed(2)}
+      <div className="mt-6 text-right text-sm space-y-1">
+        <p><strong>Total del día:</strong> ${totalForSelectedDate.toFixed(2)}</p>
+        <p className="text-gray-300">
+          <strong>Total del mes:</strong> ${totalThisMonth.toFixed(2)}
         </p>
       </div>
 
       <div className="mt-6 flex justify-between">
-        <button onClick={onBack} className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">
+        <button
+          onClick={onBack}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        >
           Volver
         </button>
         <button
@@ -118,7 +118,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
               setSelectedDate('');
             }
           }}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
         >
           Borrar historial
         </button>

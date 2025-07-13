@@ -1,4 +1,6 @@
 // components/Header.tsx
+'use client';
+
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
 
@@ -14,30 +16,37 @@ const Header: React.FC<Props> = ({
   setStoreName,
   confirmedStoreName,
   setConfirmedStoreName,
-}) => (
-  <div className="text-center mb-6">
-    <h1 className="text-4xl font-extrabold text-blue-800 mb-2 drop-shadow-sm">Administración de Ventas</h1>
+}) => {
+  return (
+    <header className="text-center bg-gray-900 text-white rounded-2xl shadow p-6 mb-6">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow mb-2">
+        Administración de Ventas
+      </h1>
 
-    {!confirmedStoreName ? (
-      <div className="flex flex-col sm:flex-row gap-2 items-center justify-center mt-4">
-        <input
-          value={storeName}
-          onChange={(e) => setStoreName(e.target.value)}
-          className="border px-4 py-2 rounded shadow-sm focus:ring-2 focus:ring-blue-400 w-64 text-center"
-          placeholder="Nombre del local"
-        />
-        <button
-          onClick={() => setConfirmedStoreName(storeName)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow flex items-center gap-2"
-        >
-          <CheckCircle size={18} />
-          Confirmar
-        </button>
-      </div>
-    ) : (
-      <h2 className="text-2xl font-semibold text-gray-800 mt-2">{confirmedStoreName}</h2>
-    )}
-  </div>
-);
+      {!confirmedStoreName ? (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+          <input
+            type="text"
+            value={storeName}
+            onChange={(e) => setStoreName(e.target.value)}
+            placeholder="Nombre del local"
+            className="w-64 px-4 py-2 rounded-md border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <button
+            onClick={() => setConfirmedStoreName(storeName)}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow"
+          >
+            <CheckCircle size={18} />
+            Confirmar
+          </button>
+        </div>
+      ) : (
+        <h2 className="text-xl sm:text-2xl font-semibold text-green-400 mt-3">
+          {confirmedStoreName}
+        </h2>
+      )}
+    </header>
+  );
+};
 
 export default Header;
