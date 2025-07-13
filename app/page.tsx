@@ -108,41 +108,41 @@ export default function Page() {
 
 return (
 <main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-screen-2xl mx-auto transition-all duration-500 ease-in-out">
-        <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in bg-gray-800/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg">
-      <button
-        onClick={() => {
-          setShowProductTable(true);
-          setShowHistory(false);
-          setSelectedSale(null);
-        }}
-        className="hover:scale-110 transition-transform"
-      >
-        <PlusCircle size={32} className="text-green-500 hover:text-green-60" />
-      </button>
+{/* 📱 Botonera fija superior en desktop, inferior en móvil */}
+<div className="fixed z-50 w-full lg:w-auto lg:top-4 lg:right-4 bottom-0 left-0 bg-gray-900 border-t border-gray-700 lg:border-none flex justify-around lg:justify-end gap-3 px-4 py-2">
+  <button
+    onClick={() => {
+      setShowProductTable(true);
+      setShowHistory(false);
+      setSelectedSale(null);
+    }}
+    className="hover:scale-110 transition-transform text-green-500 hover:text-green-400"
+  >
+    <PlusCircle size={28} />
+  </button>
 
-      <button
-        onClick={() => {
-          setShowHistory(true);
-          setShowProductTable(false);
-        }}
-        className="hover:scale-110 transition-transform"
-      >
-        <Clock size={32} className="text-blue-500 hover:text-blue-600" />
-      </button>
+  <button
+    onClick={() => {
+      setShowHistory(true);
+      setShowProductTable(false);
+    }}
+    className="hover:scale-110 transition-transform text-blue-500 hover:text-blue-400"
+  >
+    <Clock size={28} />
+  </button>
 
-      <button
-        onClick={() => {
-          setShowProductTable(false);
-          setShowHistory(false);
-          setSelectedSale(null);
-          setShowCartMobile(false); // ⬅️ aseguramos que el carrito esté cerrado
+  <button
+    onClick={() => {
+      setShowProductTable(false);
+      setShowHistory(false);
+      setSelectedSale(null);
+    }}
+    className="hover:scale-110 transition-transform text-gray-400 hover:text-white"
+  >
+    <Home size={28} />
+  </button>
+</div>
 
-        }}
-        className="hover:scale-110 transition-transform"
-      >
-        <Home size={32} className="text-gray-300 hover:text-white" />
-      </button>
-    </div>
 
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
       <div className="space-y-4">
