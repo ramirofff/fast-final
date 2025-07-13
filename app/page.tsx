@@ -135,6 +135,8 @@ return (
           setShowProductTable(false);
           setShowHistory(false);
           setSelectedSale(null);
+          setShowCartMobile(false); // ⬅️ aseguramos que el carrito esté cerrado
+
         }}
         className="hover:scale-110 transition-transform"
       >
