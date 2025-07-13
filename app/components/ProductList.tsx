@@ -1,5 +1,4 @@
-'use client';
-
+// components/ProductList.tsx
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { Pencil, ShoppingCart } from 'lucide-react';
@@ -33,31 +32,27 @@ const ProductList: React.FC<Props> = ({
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-gray-900 text-white p-4 rounded-2xl shadow-md flex flex-col justify-between relative transition hover:shadow-xl"
+            className="bg-white p-4 rounded-2xl shadow-md flex flex-col justify-between relative transition hover:shadow-xl"
           >
             <div className="absolute top-2 right-2">
               <button
                 onClick={() => setShowModal(product.id)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-gray-600"
               >
                 <Pencil size={16} />
               </button>
             </div>
 
-            {product.image && (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-28 object-cover mb-2 rounded-xl border border-gray-700"
-              />
-            )}
+            <img
+              src={product.image || '/no-image.png'}
+              alt={product.name}
+              className="w-full h-28 object-cover mb-2 rounded-xl border border-gray-700"
+            />
 
             <h3 className="font-semibold text-base">{product.name}</h3>
-            <p className="text-xs text-gray-400 mb-1">{product.category || 'Sin categoría'}</p>
+            <p className="text-xs text-gray-500 mb-1">{product.category}</p>
 
-            <p className="text-green-400 font-bold text-lg mb-2">
-              USD ${product.price.toFixed(2)}
-            </p>
+            <p className="text-green-700 font-bold text-lg mb-2">USD ${product.price.toFixed(2)}</p>
 
             {editingProductId === product.id ? (
               <div className="mb-2">
@@ -65,11 +60,11 @@ const ProductList: React.FC<Props> = ({
                   type="number"
                   value={editingPrice}
                   onChange={(e) => setEditingPrice(e.target.value)}
-                  className="border border-gray-600 bg-gray-800 text-white p-1 rounded w-full mb-1 text-sm"
+                  className="border p-1 rounded w-full mb-1 text-sm"
                 />
                 <button
                   onClick={onApplyPriceUpdate}
-                  className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 text-sm rounded w-full"
+                  className="bg-green-600 text-white px-2 py-1 text-sm rounded w-full"
                 >
                   Aplicar
                 </button>
@@ -77,7 +72,7 @@ const ProductList: React.FC<Props> = ({
             ) : (
               <button
                 onClick={() => onAddToCart(product)}
-                className="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded-xl flex items-center justify-center gap-2"
+                className="bg-green-600 text-white w-full py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700"
               >
                 <ShoppingCart size={16} />
                 Agregar al carro
@@ -89,7 +84,7 @@ const ProductList: React.FC<Props> = ({
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 text-white rounded-xl shadow-lg p-6 w-80">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-80">
             <h2 className="text-lg font-semibold mb-4">¿Qué deseas hacer?</h2>
             <div className="space-y-2">
               <button
@@ -98,7 +93,7 @@ const ProductList: React.FC<Props> = ({
                   if (product) onStartEditPrice(product.id, product.price);
                   setShowModal(null);
                 }}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded-lg"
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg"
               >
                 Modificar precio
               </button>
@@ -113,7 +108,7 @@ const ProductList: React.FC<Props> = ({
               </button>
               <button
                 onClick={() => setShowModal(null)}
-                className="w-full bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg"
+                className="w-full bg-gray-300 hover:bg-gray-400 text-black py-2 rounded-lg"
               >
                 Cancelar
               </button>

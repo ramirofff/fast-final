@@ -101,13 +101,11 @@ export default function ProductListTable({
             {filteredProducts.map(product => (
               <tr key={product.id} className="border-t border-gray-700 hover:bg-gray-800">
                 <td className="p-3">
-                  {product.image && (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-12 h-12 object-cover rounded border"
-                    />
-                  )}
+                  <img
+                    src={product.image || '/no-image.png'}
+                    alt={product.name}
+                    className="w-12 h-12 object-cover rounded border border-gray-600"
+                  />
                 </td>
                 <td className="p-3 w-40">
                   {editingProductId === product.id && editingField === 'name' ? (
