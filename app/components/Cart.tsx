@@ -5,13 +5,15 @@ import { Product, CartItem } from '../types';
 import QRCode from 'react-qr-code';
 import CartItemRow from './CartItemRow';
 import { PercentCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+
 
 interface CartProps {
   cart: CartItem[];
   onClear: () => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onConfirm: (sale: {
-    timestamp: string;
+    created_at: string;
     items: Product[];
     total: number;
     discount: number;
@@ -46,16 +48,16 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
     };
   }, []);
 
-  const simulateStripePayment = () => {
+  const simulateStripePayment = async () => {
     if (isProcessingPayment || total <= 0) return;
 
     setSimulatedCheckoutUrl('https://fake-stripe-checkout.com/session/123456');
     setShowSimulatedQR(true);
     setIsProcessingPayment(true);
 
-    paymentTimeoutRef.current = setTimeout(() => {
+    paymentTimeoutRef.current = setTimeout(async () => {
       const sale = {
-        timestamp: new Date().toISOString(),
+        created_at: new Date().toISOString(),
         items: cart.flatMap(item =>
           Array(item.quantity).fill({
             id: item.id,
@@ -69,8 +71,20 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
         discount: numericDiscount,
       };
 
-      const salesHistory = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-      localStorage.setItem('salesHistory', JSON.stringify([...salesHistory, sale]));
+      const { error } = await supabase.from('sales').insert([{
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        items: sale.items,
+        total: sale.total,
+        discount: sale.discount,
+        created_at: sale.created_at,
+      }]);
+
+      if (error) {
+        alert('Error al guardar la venta');
+        setIsProcessingPayment(false);
+        return;
+      }
+
       setShowReceipt(true);
       setShowSimulatedQR(false);
       setIsProcessingPayment(false);

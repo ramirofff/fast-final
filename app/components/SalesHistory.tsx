@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Sale } from '../types';
 
 interface SalesHistoryProps {
-  salesToday: Sale[];
-  totalToday: number;
   onBack: () => void;
   onClear: () => void;
   onViewTicket: (sale: Sale) => void;
@@ -23,28 +22,46 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
   const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   useEffect(() => {
-    const storedSales: Sale[] = JSON.parse(localStorage.getItem('salesHistory') || '[]');
-    setAllSales(storedSales);
+    const fetchSales = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const uniqueDates = Array.from(
-      new Set(storedSales.map(sale => sale.timestamp.split('T')[0]))
-    ).sort().reverse();
+      if (!user) return;
 
-    setAvailableDates(uniqueDates);
-    if (uniqueDates.length > 0) {
-      setSelectedDate(uniqueDates[0]);
-    }
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error al cargar historial de ventas:', error);
+      } else if (data) {
+        setAllSales(data);
+        const uniqueDates = Array.from(
+          new Set(data.map(sale => sale.created_at.split('T')[0]))
+        ).sort().reverse();
+
+        setAvailableDates(uniqueDates);
+        if (uniqueDates.length > 0) {
+          setSelectedDate(uniqueDates[0]);
+        }
+      }
+    };
+
+    fetchSales();
   }, []);
 
   const salesForSelectedDate = allSales.filter(sale =>
-    sale.timestamp.startsWith(selectedDate)
+    sale.created_at.startsWith(selectedDate)
   );
 
   const totalForSelectedDate = salesForSelectedDate.reduce((sum, sale) => sum + sale.total, 0);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
   const salesThisMonth = allSales.filter(sale =>
-    sale.timestamp.startsWith(currentMonth)
+    sale.created_at.startsWith(currentMonth)
   );
   const totalThisMonth = salesThisMonth.reduce((sum, sale) => sum + sale.total, 0);
 
@@ -81,7 +98,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
           {salesForSelectedDate.map((sale, index) => (
             <div key={index} className="flex justify-between items-center border-b border-gray-700 pb-2">
               <div className="text-sm">
-                {new Date(sale.timestamp).toLocaleTimeString()} -{' '}
+                {new Date(sale.created_at).toLocaleTimeString()} -{' '}
                 <span className="ml-2">Total: ${sale.total.toFixed(2)}</span>
               </div>
               <button
@@ -110,12 +127,20 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
           Volver
         </button>
         <button
-          onClick={() => {
+          onClick={async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
             if (confirm('¿Estás seguro de borrar todo el historial de ventas?')) {
-              onClear();
-              setAllSales([]);
-              setAvailableDates([]);
-              setSelectedDate('');
+              const { error } = await supabase.from('sales').delete().eq('user_id', user.id);
+              if (error) {
+                alert('Error al borrar historial');
+              } else {
+                onClear();
+                setAllSales([]);
+                setAvailableDates([]);
+                setSelectedDate('');
+              }
             }
           }}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"

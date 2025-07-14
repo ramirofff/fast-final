@@ -1,7 +1,8 @@
-// components/ProductList.tsx
+'use client';
+
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { Pencil, ShoppingCart } from 'lucide-react';
+import { Pencil, ShoppingCart, Tag } from 'lucide-react';
 
 interface Props {
   products: Product[];
@@ -12,6 +13,7 @@ interface Props {
   editingPrice: string;
   setEditingPrice: (value: string) => void;
   onApplyPriceUpdate: () => void;
+  onOpenCategoryChange: (id: string) => void; // ✅ nueva prop
 }
 
 const ProductList: React.FC<Props> = ({
@@ -23,6 +25,7 @@ const ProductList: React.FC<Props> = ({
   editingPrice,
   setEditingPrice,
   onApplyPriceUpdate,
+  onOpenCategoryChange,
 }) => {
   const [showModal, setShowModal] = useState<string | null>(null);
 
@@ -37,7 +40,7 @@ const ProductList: React.FC<Props> = ({
             <div className="absolute top-2 right-2">
               <button
                 onClick={() => setShowModal(product.id)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-200"
               >
                 <Pencil size={16} />
               </button>
@@ -51,11 +54,17 @@ const ProductList: React.FC<Props> = ({
               />
             </div>
 
-
             <h3 className="font-semibold text-base">{product.name}</h3>
-            <p className="text-xs text-gray-500 mb-1">{product.category}</p>
-
-            <p className="text-green-700 font-bold text-lg mb-2">USD ${product.price.toFixed(2)}</p>
+            <p className="text-xs text-gray-500 mb-1">
+              {product.category === 'Sin categoría' ? (
+                <span className="text-red-400">Sin categoría</span>
+              ) : (
+                product.category
+              )}
+            </p>
+            <p className="text-green-700 font-bold text-lg mb-2">
+              USD ${product.price.toFixed(2)}
+            </p>
 
             {editingProductId === product.id ? (
               <div className="mb-2">
@@ -63,7 +72,7 @@ const ProductList: React.FC<Props> = ({
                   type="number"
                   value={editingPrice}
                   onChange={(e) => setEditingPrice(e.target.value)}
-                  className="border p-1 rounded w-full mb-1 text-sm"
+                  className="border p-1 rounded w-full mb-1 text-sm text-black"
                 />
                 <button
                   onClick={onApplyPriceUpdate}
@@ -81,6 +90,8 @@ const ProductList: React.FC<Props> = ({
                 Agregar al carro
               </button>
             )}
+
+
           </div>
         ))}
       </div>
@@ -100,6 +111,17 @@ const ProductList: React.FC<Props> = ({
               >
                 Modificar precio
               </button>
+
+              <button
+                onClick={() => {
+                  onOpenCategoryChange(showModal);
+                  setShowModal(null);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
+              >
+                Asignar/cambiar categoría
+              </button>
+
               <button
                 onClick={() => {
                   onDelete(showModal);
@@ -109,6 +131,7 @@ const ProductList: React.FC<Props> = ({
               >
                 Eliminar producto
               </button>
+
               <button
                 onClick={() => setShowModal(null)}
                 className="w-full bg-gray-300 hover:bg-gray-400 text-black py-2 rounded-lg"

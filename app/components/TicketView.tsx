@@ -55,8 +55,8 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
         </head>
         <body>
           <h2>Ticket de Compra</h2>
-          <p>Fecha: ${new Date(sale.timestamp).toLocaleDateString()}</p>
-          <p>Hora: ${new Date(sale.timestamp).toLocaleTimeString()}</p>
+          <p>Fecha: ${new Date(sale.created_at).toLocaleDateString()}</p>
+          <p>Hora: ${new Date(sale.created_at).toLocaleTimeString()}</p>
           <table>
             <thead>
               <tr><th>Producto</th><th>Precio</th></tr>
@@ -93,8 +93,8 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
       <div className="bg-gray-900 text-white p-4 border border-gray-700 rounded-xl shadow-lg w-full max-w-sm mx-auto">
         <h2 className="text-center font-bold text-lg mb-2 text-blue-400">Ticket de Compra</h2>
         <p className="text-center mb-4 text-gray-300">
-          Fecha: {new Date(sale.timestamp).toLocaleDateString()}<br />
-          Hora: {new Date(sale.timestamp).toLocaleTimeString()}
+          Fecha: {new Date(sale.created_at).toLocaleDateString()}<br />
+          Hora: {new Date(sale.created_at).toLocaleTimeString()}
         </p>
         <table className="w-full text-left mb-4">
           <thead>

@@ -1,4 +1,3 @@
-// components/Header.tsx
 'use client';
 
 import React from 'react';
@@ -33,7 +32,12 @@ const Header: React.FC<Props> = ({
             className="w-64 px-4 py-2 rounded-md border border-gray-700 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
           />
           <button
-            onClick={() => setConfirmedStoreName(storeName)}
+            onClick={() => {
+              if (storeName.trim() !== '') {
+                setConfirmedStoreName(storeName);
+                localStorage.setItem('confirmedStoreName', storeName);
+              }
+            }}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow"
           >
             <CheckCircle size={18} />

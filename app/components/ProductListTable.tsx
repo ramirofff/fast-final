@@ -37,9 +37,9 @@ export default function ProductListTable({
   onOpenCategoryChange,
 }: ProductListTableProps) {
   const [editingField, setEditingField] = useState<'name' | 'category' | 'price' | null>(null);
-  const [editingName, setEditingName] = useState<string>('');
-  const [editingCategory, setEditingCategory] = useState<string>('');
-  const [search, setSearch] = useState<string>('');
+  const [editingName, setEditingName] = useState('');
+  const [editingCategory, setEditingCategory] = useState('');
+  const [search, setSearch] = useState('');
 
   const startEdit = (id: string, field: 'name' | 'category' | 'price', value: string | number) => {
     setEditingProductId(id);
@@ -55,20 +55,14 @@ export default function ProductListTable({
   };
 
   const handleSaveName = (id: string) => {
-    const updated = products.map(p =>
-      p.id === id ? { ...p, name: editingName } : p
-    );
+    const updated = products.map(p => (p.id === id ? { ...p, name: editingName } : p));
     setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
     cancelEdit();
   };
 
   const handleSaveCategory = (id: string) => {
-    const updated = products.map(p =>
-      p.id === id ? { ...p, category: editingCategory } : p
-    );
+    const updated = products.map(p => (p.id === id ? { ...p, category: editingCategory } : p));
     setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
     cancelEdit();
   };
 
@@ -119,23 +113,17 @@ export default function ProductListTable({
                       <button
                         onClick={() => handleSaveName(product.id)}
                         className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
-                      >
-                        ✔
-                      </button>
+                      >✔</button>
                       <button
                         onClick={cancelEdit}
                         className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
-                      >
-                        ✖
-                      </button>
+                      >✖</button>
                     </div>
                   ) : (
                     <span
                       onClick={() => startEdit(product.id, 'name', product.name)}
                       className="cursor-pointer hover:text-blue-400"
-                    >
-                      ✏️ {product.name}
-                    </span>
+                    >✏️ {product.name}</span>
                   )}
                 </td>
                 <td className="p-3 w-40">
@@ -153,23 +141,17 @@ export default function ProductListTable({
                       <button
                         onClick={() => handleSaveCategory(product.id)}
                         className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
-                      >
-                        ✔
-                      </button>
+                      >✔</button>
                       <button
                         onClick={cancelEdit}
                         className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
-                      >
-                        ✖
-                      </button>
+                      >✖</button>
                     </div>
                   ) : (
                     <span
                       onClick={() => startEdit(product.id, 'category', product.category)}
                       className="cursor-pointer hover:text-blue-400"
-                    >
-                      ✏️ {product.category}
-                    </span>
+                    >✏️ {product.category}</span>
                   )}
                 </td>
                 <td className="p-3 w-32">
@@ -184,32 +166,24 @@ export default function ProductListTable({
                       <button
                         onClick={onApplyPriceUpdate}
                         className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
-                      >
-                        ✔
-                      </button>
+                      >✔</button>
                       <button
                         onClick={cancelEdit}
                         className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
-                      >
-                        ✖
-                      </button>
+                      >✖</button>
                     </div>
                   ) : (
                     <span
                       onClick={() => startEdit(product.id, 'price', product.price)}
                       className="cursor-pointer hover:text-blue-400"
-                    >
-                      ✏️ ${product.price.toFixed(2)}
-                    </span>
+                    >✏️ ${product.price.toFixed(2)}</span>
                   )}
                 </td>
                 <td className="p-3">
                   <button
                     onClick={() => onDelete(product.id)}
                     className="text-red-500 hover:text-red-600 text-sm hover:underline"
-                  >
-                    🗑 Eliminar
-                  </button>
+                  >🗑 Eliminar</button>
                 </td>
               </tr>
             ))}

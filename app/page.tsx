@@ -1,9 +1,9 @@
-// ✅ Adaptación responsive mejorada con estética refinada y distribución profesional
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { Product, Sale, CartItem } from './types';
+import { supabase } from '../lib/supabaseClient';
+import Login from './components/Login';
 
 import Cart from './components/Cart';
 import AddProductModal from './components/AddProductModal';
@@ -16,13 +16,14 @@ import TicketView from './components/TicketView';
 import CategoryChangeModal from './components/CategoryChangeModal';
 import { PlusCircle, Clock, Home } from 'lucide-react';
 
+
 export default function Page() {
+  const [session, setSession] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [storeName, setStoreName] = useState<string>('');
   const [confirmedStoreName, setConfirmedStoreName] = useState<string>('');
   const [showHistory, setShowHistory] = useState<boolean>(false);
-  const [salesToday, setSalesToday] = useState<Sale[]>([]);
   const [showProductTable, setShowProductTable] = useState(false);
   const [categories, setCategories] = useState<string[]>(['Sin categoría']);
   const [activeCategory, setActiveCategory] = useState<string>('');
@@ -35,19 +36,81 @@ export default function Page() {
   const [showCartMobile, setShowCartMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Verifica sesión activa
   useEffect(() => {
-    const savedProducts = localStorage.getItem('products');
-    const savedCategories = localStorage.getItem('categories');
-    const savedStore = localStorage.getItem('confirmedStoreName');
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-    if (savedProducts) setProducts(JSON.parse(savedProducts));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
-    let parsedCategories = savedCategories ? JSON.parse(savedCategories) : [];
-    parsedCategories = parsedCategories.filter((cat: string) => cat !== 'Sin categoría');
-    setCategories(['Sin categoría', ...parsedCategories]);
-
-    if (savedStore) setConfirmedStoreName(savedStore);
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
   }, []);
+
+  // Carga productos del usuario autenticado
+
+useEffect(() => {
+  if (!session?.user) return;
+
+  const fetchData = async () => {
+    try {
+      // Cargar nombre del local
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('store_name')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error cargando perfil:', profileError.message);
+      } else if (profile?.store_name) {
+        setStoreName(profile.store_name);
+        setConfirmedStoreName(profile.store_name);
+      }
+
+      // Cargar productos
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', session.user.id);
+
+      if (productsError) {
+        console.error('Error cargando productos:', productsError.message);
+      } else if (productsData) {
+        const mapped = productsData.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          category: p.category,
+          image: p.image_url,
+        }));
+        setProducts(mapped);
+      }
+
+      // Cargar categorías reales desde Supabase
+      const { data: catData, error: catError } = await supabase
+        .from('categories')
+        .select('name')
+        .eq('user_id', session.user.id);
+
+      if (catError) {
+        console.error('Error cargando categorías:', catError.message);
+      } else if (catData) {
+        const unique = Array.from(new Set(catData.map(c => c.name)));
+        setCategories(['Sin categoría', ...unique]);
+      }
+    } catch (err) {
+      console.error('Error general en fetchData:', err);
+    }
+  };
+
+  fetchData();
+}, [session]);
+
 
   const addToCart = (product: Product) => {
     const existing = cartItems.find(item => item.id === product.id);
@@ -61,41 +124,128 @@ export default function Page() {
     }
   };
 
-  const handleConfirmStoreName = () => {
+  const handleConfirmStoreName = async () => {
     if (storeName.trim() !== '') {
-      setConfirmedStoreName(storeName);
-      localStorage.setItem('confirmedStoreName', storeName);
+          setConfirmedStoreName(storeName);
+
+        // Guarda el nombre de la tienda en Supabase (tabla profiles)
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({ id: session.user.id, store_name: storeName });
+
+        if (error) console.error('Error al guardar nombre del local:', error.message);
+
     }
   };
 
-  const handleDeleteCategory = (categoryToDelete: string) => {
-    if (categoryToDelete === 'Sin categoría') return;
+  const handleDeleteCategory = async (categoryToDelete: string) => {
+  if (categoryToDelete === 'Sin categoría') return;
 
-    const updatedCategories = categories.filter(cat => cat !== categoryToDelete);
-    setCategories(updatedCategories);
-    localStorage.setItem('categories', JSON.stringify(updatedCategories));
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const userId = userData?.user?.id;
+  if (userError || !userId) {
+    alert('Usuario no autenticado');
+    return;
+  }
 
-    const updatedProducts = products.map(p =>
-      p.category === categoryToDelete ? { ...p, category: 'Sin categoría' } : p
-    );
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-  };
+  // 1. Actualizar productos que usaban esta categoría
+  const { error: updateProductsError } = await supabase
+    .from('products')
+    .update({ category: 'Sin categoría' })
+    .eq('category', categoryToDelete)
+    .eq('user_id', userId);
 
-  const handleEditCategory = (oldCat: string, newCat: string) => {
-    if (oldCat === 'Sin categoría' || !newCat.trim()) return;
-    const updatedCategories = categories.map(cat => (cat === oldCat ? newCat : cat));
-    setCategories(updatedCategories);
-    localStorage.setItem('categories', JSON.stringify(updatedCategories));
+  if (updateProductsError) {
+    console.error('Error actualizando productos:', updateProductsError.message);
+    return;
+  }
 
-    const updatedProducts = products.map(p =>
-      p.category === oldCat ? { ...p, category: newCat } : p
-    );
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-  };
+  // 2. Eliminar la categoría en la tabla categories
+  const { error: deleteCatError } = await supabase
+    .from('categories')
+    .delete()
+    .eq('name', categoryToDelete)
+    .eq('user_id', userId);
 
-  const totalToday = salesToday.reduce((acc, sale) => acc + sale.total, 0);
+  if (deleteCatError) {
+    console.error('Error eliminando categoría:', deleteCatError.message);
+    return;
+  }
+
+  // 3. Refrescar estado local
+  const updatedCategories = categories.filter(cat => cat !== categoryToDelete);
+  setCategories(updatedCategories);
+
+  const updatedProducts = products.map(p =>
+    p.category === categoryToDelete ? { ...p, category: 'Sin categoría' } : p
+  );
+  setProducts(updatedProducts);
+};
+
+const handleEditCategory = async (oldCat: string, newCat: string) => {
+  if (
+    oldCat === 'Sin categoría' ||
+    !newCat.trim() ||
+    oldCat.trim() === newCat.trim()
+  ) return;
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const userId = userData?.user?.id;
+  if (userError || !userId) {
+    alert('Usuario no autenticado');
+    return;
+  }
+
+  // 1. Actualizar categoría en la tabla categories
+  const { error: updateCatError } = await supabase
+    .from('categories')
+    .update({ name: newCat.trim() })
+    .eq('name', oldCat)
+    .eq('user_id', userId);
+
+  if (updateCatError) {
+    console.error('Error actualizando categoría:', updateCatError.message);
+    return;
+  }
+
+  // 2. Actualizar productos con la categoría vieja
+  const { error: updateProdError } = await supabase
+    .from('products')
+    .update({ category: newCat.trim() })
+    .eq('category', oldCat)
+    .eq('user_id', userId);
+
+  if (updateProdError) {
+    console.error('Error actualizando productos:', updateProdError.message);
+    return;
+  }
+
+  // 3. Refrescar categorías desde la base
+  const { data: updatedCats, error: catFetchError } = await supabase
+    .from('categories')
+    .select('name')
+    .eq('user_id', userId);
+
+  if (catFetchError) {
+    console.error('Error recargando categorías:', catFetchError.message);
+  } else {
+    const unique = Array.from(new Set(updatedCats.map(c => c.name)));
+    setCategories(['Sin categoría', ...unique]);
+  }
+
+  // 4. Refrescar productos localmente
+  const updatedProducts = products.map(p =>
+    p.category === oldCat ? { ...p, category: newCat.trim() } : p
+  );
+  setProducts(updatedProducts);
+};
+
+
+
+
+  ;
+;
+
 
   const filteredProducts = products.filter(
     (p) =>
@@ -103,69 +253,68 @@ export default function Page() {
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // el return está bien estructurado, no hay cambios necesarios
+if (!session) {
+  return <Login onLogin={() => location.reload()} />;
+}
 
 
 return (
-<main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-screen-2xl mx-auto transition-all duration-500 ease-in-out">
-{!showCartMobile && (
-  <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in bg-gray-800/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg">
-    <button
-      onClick={() => {
-        setShowProductTable(true);
-        setShowHistory(false);
-        setSelectedSale(null);
-      }}
-      className="hover:scale-110 transition-transform"
-    >
-      <PlusCircle size={32} className="text-green-500 hover:text-green-600" />
-    </button>
+  <main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-screen-2xl mx-auto transition-all duration-500 ease-in-out">
+    {!showCartMobile && (
+      <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in bg-gray-800/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg">
+        <button
+          onClick={() => {
+            setShowProductTable(true);
+            setShowHistory(false);
+            setSelectedSale(null);
+          }}
+          className="hover:scale-110 transition-transform"
+        >
+          <PlusCircle size={32} className="text-green-500 hover:text-green-600" />
+        </button>
 
-    <button
-      onClick={() => {
-        setShowHistory(true);
-        setShowProductTable(false);
-      }}
-      className="hover:scale-110 transition-transform"
-    >
-      <Clock size={32} className="text-blue-500 hover:text-blue-600" />
-    </button>
+        <button
+          onClick={() => {
+            setShowHistory(true);
+            setShowProductTable(false);
+          }}
+          className="hover:scale-110 transition-transform"
+        >
+          <Clock size={32} className="text-blue-500 hover:text-blue-600" />
+        </button>
 
-    <button
-      onClick={() => {
-        setShowProductTable(false);
-        setShowHistory(false);
-        setSelectedSale(null);
-        setShowCartMobile(false); // aseguramos cerrar el carrito si está abierto
-      }}
-      className="hover:scale-110 transition-transform"
-    >
-      <Home size={32} className="text-gray-300 hover:text-white" />
-    </button>
-  </div>
-)}
-
+        <button
+          onClick={() => {
+            setShowProductTable(false);
+            setShowHistory(false);
+            setSelectedSale(null);
+            setShowCartMobile(false);
+          }}
+          className="hover:scale-110 transition-transform"
+        >
+          <Home size={32} className="text-gray-300 hover:text-white" />
+        </button>
+      </div>
+    )}
 
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
       <div className="space-y-4">
-
         {showProductTable && (
           <>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
-          >
-            <PlusCircle size={18} /> Agregar producto
-          </button>
-
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
+            >
+              <PlusCircle size={18} /> Agregar producto
+            </button>
 
             <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
               <ProductListTable
                 products={products}
-                onDelete={(id) => {
+                onDelete={async (id) => {
                   const updated = products.filter(p => p.id !== id);
                   setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
+                  await supabase.from('products').delete().eq('id', id);
                 }}
                 onStartEditPrice={(id, price) => {
                   setEditingProductId(id);
@@ -174,14 +323,17 @@ return (
                 editingProductId={editingProductId}
                 editingPrice={editingPrice}
                 setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={() => {
+                onApplyPriceUpdate={async () => {
                   const newPrice = parseFloat(editingPrice);
                   if (isNaN(newPrice)) return;
                   const updated = products.map(p =>
                     p.id === editingProductId ? { ...p, price: newPrice } : p
                   );
                   setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
+                  await supabase
+                    .from('products')
+                    .update({ price: newPrice })
+                    .eq('id', editingProductId);
 
                   const updatedCart = cartItems.map(p =>
                     p.id === editingProductId ? { ...p, price: newPrice } : p
@@ -196,12 +348,15 @@ return (
                 setEditingProductId={setEditingProductId}
                 onDeleteCategory={handleDeleteCategory}
                 onEditCategory={handleEditCategory}
-                onUpdateProductCategory={(id, newCategory) => {
+                onUpdateProductCategory={async (id, newCategory) => {
                   const updated = products.map(p =>
                     p.id === id ? { ...p, category: newCategory } : p
                   );
                   setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
+                  await supabase
+                    .from('products')
+                    .update({ category: newCategory })
+                    .eq('id', id);
                 }}
                 onOpenCategoryChange={(id) => {
                   setCategoryProductId(id);
@@ -242,77 +397,86 @@ return (
               />
             </div>
             <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6 relative z-10">
-              <ProductList
-                products={filteredProducts}
-                onAddToCart={addToCart}
-                onDelete={(id) => {
-                  const updated = products.filter(p => p.id !== id);
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-                }}
-                onStartEditPrice={(id, price) => {
-                  setEditingProductId(id);
-                  setEditingPrice(price.toString());
-                }}
-                editingProductId={editingProductId}
-                editingPrice={editingPrice}
-                setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={() => {
-                  const newPrice = parseFloat(editingPrice);
-                  if (isNaN(newPrice)) return;
-                  const updated = products.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
+  <ProductList
+    products={filteredProducts}
+    onAddToCart={addToCart}
+    onDelete={async (id) => {
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      await supabase.from('products').delete().eq('id', id);
+    }}
+    onStartEditPrice={(id, price) => {
+      setEditingProductId(id);
+      setEditingPrice(price.toString());
+    }}
+    editingProductId={editingProductId}
+    editingPrice={editingPrice}
+    setEditingPrice={setEditingPrice}
+    onApplyPriceUpdate={async () => {
+      const newPrice = parseFloat(editingPrice);
+      if (isNaN(newPrice)) return;
+      const updated = products.map(p =>
+        p.id === editingProductId ? { ...p, price: newPrice } : p
+      );
+      setProducts(updated);
+      await supabase
+        .from('products')
+        .update({ price: newPrice })
+        .eq('id', editingProductId);
 
-                  const updatedCart = cartItems.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setCartItems(updatedCart);
+      const updatedCart = cartItems.map(p =>
+        p.id === editingProductId ? { ...p, price: newPrice } : p
+      );
+      setCartItems(updatedCart);
 
-                  setEditingProductId(null);
-                  setEditingPrice('');
-                }}
-              />
-            </div>
+      setEditingProductId(null);
+      setEditingPrice('');
+    }}
+    onOpenCategoryChange={(id) => {
+      setCategoryProductId(id);
+      setShowCategoryModal(true);
+    }}
+  />
+</div>
           </>
         )}
 
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
-              <AddProductModal
-                onClose={() => setShowAddModal(false)}
-                onAdd={(product) => {
-                  const updated = [...products, product];
-                  setProducts(updated);
-                  localStorage.setItem('products', JSON.stringify(updated));
-                  if (!categories.includes(product.category)) {
-                    const updatedCats = [...categories, product.category];
-                    setCategories(updatedCats);
-                    localStorage.setItem('categories', JSON.stringify(updatedCats));
-                  }
-                  setShowAddModal(false);
-                }}
-              />
-            </div>
-          </div>
-        )}
+
+{showAddModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+      <AddProductModal
+        categories={categories}
+        onClose={() => setShowAddModal(false)}
+        onAdd={(product) => {
+          const updated = [...products, product];
+          setProducts(updated);
+
+          if (!categories.includes(product.category)) {
+            const updatedCats = [...categories, product.category];
+            setCategories(updatedCats);
+          }
+
+          setShowAddModal(false);
+        }}
+      />
+    </div>
+  </div>
+)}
+
+
 
         {showHistory && (
           <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
-            <SalesHistory
-              salesToday={salesToday}
-              totalToday={totalToday}
-              onBack={() => setShowHistory(false)}
-              onClear={() => {
-                localStorage.removeItem('salesHistory');
-                setSalesToday([]);
-              }}
-              onViewTicket={setSelectedSale}
-              localName={confirmedStoreName}
-            />
+<SalesHistory
+  onBack={() => setShowHistory(false)}
+  onClear={() => setShowHistory(false)}
+  onViewTicket={setSelectedSale}
+  localName={confirmedStoreName}
+/>
+
+
+            
           </div>
         )}
 
@@ -323,9 +487,46 @@ return (
             </div>
           </div>
         )}
+       {showCategoryModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
+      <CategoryChangeModal
+        productId={categoryProductId}
+        categories={categories}
+        onClose={() => setShowCategoryModal(false)}
+        onCategoryChange={async (newCategory) => {
+          const { data: userData } = await supabase.auth.getUser();
+          const userId = userData?.user?.id;
+          if (!userId) return;
+
+          // Si la categoría no existe, la agregamos
+          if (!categories.includes(newCategory)) {
+            await supabase.from('categories').insert({ name: newCategory, user_id: userId });
+            setCategories(prev => [...prev, newCategory]);
+          }
+
+          await supabase
+            .from('products')
+            .update({ category: newCategory })
+            .eq('id', categoryProductId)
+            .eq('user_id', userId);
+
+          setProducts(prev =>
+            prev.map(p =>
+              p.id === categoryProductId ? { ...p, category: newCategory } : p
+            )
+          );
+          setShowCategoryModal(false);
+        }}
+      />
+    </div>
+  </div>
+)}
+ 
       </div>
 
 {/* Carrito fijo para escritorio */}
+
 {!showHistory && !showProductTable && confirmedStoreName && (
   <div className="hidden lg:block fixed top-24 right-4 w-[260px]">
     <Cart
@@ -342,10 +543,29 @@ return (
           );
         }
       }}
-      onConfirm={(sale) => {
-        setSelectedSale(sale);
-        setShowHistory(false);
-        setShowProductTable(false);
+      onConfirm={async (sale) => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          alert("Usuario no autenticado");
+          return;
+        }
+
+        const { error } = await supabase.from("sales").insert({
+          user_id: user.id,
+          items: sale.items,
+          total: sale.total,
+          discount: sale.discount,
+        });
+
+        if (error) {
+          alert("Error al guardar venta: " + error.message);
+        } else {
+          setSelectedSale(sale);
+          setShowHistory(false);
+          setShowProductTable(false);
+        }
       }}
     />
   </div>
@@ -421,6 +641,8 @@ return (
           </button>
 
 {/* Carrito móvil, siempre montado y ocultado con clases */}
+
+
 {!showHistory && !showProductTable && confirmedStoreName && (
   <div
     className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ease-out transform ${
@@ -453,16 +675,36 @@ return (
             );
           }
         }}
-        onConfirm={(sale) => {
-          setSelectedSale(sale);
-          setShowHistory(false);
-          setShowProductTable(false);
-          setShowCartMobile(false);
+        onConfirm={async (sale) => {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) {
+            alert("Usuario no autenticado");
+            return;
+          }
+
+          const { error } = await supabase.from("sales").insert({
+            user_id: user.id,
+            items: sale.items,
+            total: sale.total,
+            discount: sale.discount,
+          });
+
+          if (error) {
+            alert("Error al guardar venta: " + error.message);
+          } else {
+            setSelectedSale(sale);
+            setShowHistory(false);
+            setShowProductTable(false);
+            setShowCartMobile(false);
+          }
         }}
       />
     </div>
   </div>
 )}
+
 
 
         </>
