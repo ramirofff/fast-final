@@ -9,7 +9,7 @@ export default function Receipt({ cart, onClose }: Props) {
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <div className="fixed inset-0 bg-gray-900 text-gray-100 p-6 print:p-0 print:bg-white z-50 flex flex-col items-center justify-start">
+    <div className="fixed inset-0 bg-[#0b1728] text-gray-100 p-6 print:p-0 print:bg-white z-50 flex flex-col items-center justify-start">
       <div className="max-w-sm w-full text-center border border-gray-700 bg-gray-800 rounded-xl p-6 shadow-lg print:border-0 print:bg-white print:text-black print:mt-6">
         <h2 className="text-2xl font-bold mb-2">🧾 Ticket de Compra</h2>
         <p className="text-sm text-gray-400 mb-4">Gestión de ventas </p>

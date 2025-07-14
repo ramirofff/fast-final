@@ -8,13 +8,13 @@ import Login from './components/Login';
 import Cart from './components/Cart';
 import AddProductModal from './components/AddProductModal';
 import ProductListTable from './components/ProductListTable';
-import ProductList from './components/ProductList';
 import Header from './components/Header';
 import CategorySelector from './components/CategorySelector';
 import SalesHistory from './components/SalesHistory';
 import TicketView from './components/TicketView';
 import CategoryChangeModal from './components/CategoryChangeModal';
 import { PlusCircle, Clock, Home } from 'lucide-react';
+
 
 
 export default function Page() {
@@ -35,6 +35,7 @@ export default function Page() {
   const [categoryProductId, setCategoryProductId] = useState<string>('');
   const [showCartMobile, setShowCartMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
 
   // Verifica sesión activa
   useEffect(() => {
@@ -87,6 +88,8 @@ useEffect(() => {
           price: p.price,
           category: p.category,
           image: p.image_url,
+            originalPrice: p.original_price || undefined, // ✅ esto faltaba
+
         }));
         setProducts(mapped);
       }
@@ -246,6 +249,45 @@ const handleEditCategory = async (oldCat: string, newCat: string) => {
   ;
 ;
 
+const applyPriceUpdate = async () => {
+  const newPrice = parseFloat(editingPrice);
+  if (isNaN(newPrice) || !editingProductId) return;
+
+  const originalProduct = products.find(p => p.id === editingProductId);
+  if (!originalProduct) return;
+
+  const prevOriginal = originalProduct.originalPrice ?? originalProduct.price;
+  const showDiscount = prevOriginal > newPrice;
+
+  const updatedProducts = products.map(p =>
+    p.id === editingProductId
+      ? {
+          ...p,
+          price: newPrice,
+          originalPrice: showDiscount ? prevOriginal : undefined,
+        }
+      : p
+  );
+  setProducts(updatedProducts);
+
+  await supabase
+    .from('products')
+    .update({
+      price: newPrice,
+      original_price: showDiscount ? prevOriginal : null,
+    })
+    .eq('id', editingProductId);
+
+  setCartItems(prev =>
+    prev.map(p =>
+      p.id === editingProductId ? { ...p, price: newPrice } : p
+    )
+  );
+
+  setEditingProductId(null);
+  setEditingPrice('');
+};
+
 
   const filteredProducts = products.filter(
     (p) =>
@@ -259,43 +301,54 @@ if (!session) {
 
 
 return (
-  <main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-screen-2xl mx-auto transition-all duration-500 ease-in-out">
-    {!showCartMobile && (
-      <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in bg-gray-800/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg">
-        <button
-          onClick={() => {
-            setShowProductTable(true);
-            setShowHistory(false);
-            setSelectedSale(null);
-          }}
-          className="hover:scale-110 transition-transform"
-        >
-          <PlusCircle size={32} className="text-green-500 hover:text-green-600" />
-        </button>
+<main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-7xl mx-auto transition-all duration-500 ease-in-out">
 
-        <button
-          onClick={() => {
-            setShowHistory(true);
-            setShowProductTable(false);
-          }}
-          className="hover:scale-110 transition-transform"
-        >
-          <Clock size={32} className="text-blue-500 hover:text-blue-600" />
-        </button>
+{!showCartMobile && (
+  <div className="fixed top-4 right-4 flex gap-3 z-50 animate-fade-in bg-gray-800/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg">
+    {/* Botón para ADMINISTRACIÓN DE PRODUCTOS */}
+    <button
+      onClick={() => {
+        setShowProductTable(true);     // Muestra tabla de productos
+        setShowHistory(false);         // Oculta historial
+        setSelectedSale(null);         // Limpia ticket
+        setShowCartMobile(false);      // Oculta carrito móvil
+        setShowAddModal(false);        // Oculta modal si quedó abierto
+      }}
+      className="hover:scale-110 transition-transform"
+    >
+      <PlusCircle size={40} className="text-green-500 hover:text-green-600" />
+    </button>
 
-        <button
-          onClick={() => {
-            setShowProductTable(false);
-            setShowHistory(false);
-            setSelectedSale(null);
-            setShowCartMobile(false);
-          }}
-          className="hover:scale-110 transition-transform"
-        >
-          <Home size={32} className="text-gray-300 hover:text-white" />
-        </button>
-      </div>
-    )}
+    {/* Botón para HISTORIAL */}
+    <button
+      onClick={() => {
+        setShowHistory(true);
+        setShowProductTable(false);
+        setSelectedSale(null);
+        setShowAddModal(false);
+        setShowCartMobile(false);
+      }}
+      className="hover:scale-110 transition-transform"
+    >
+      <Clock size={40} className="text-blue-500 hover:text-blue-600" />
+    </button>
+
+    {/* Botón para VOLVER AL INICIO */}
+    <button
+      onClick={() => {
+        setShowProductTable(false);
+        setShowHistory(false);
+        setSelectedSale(null);
+        setShowCartMobile(false);
+        setShowAddModal(false);
+      }}
+      className="hover:scale-110 transition-transform"
+    >
+      <Home size={40} className="text-gray-300 hover:text-white" />
+    </button>
+  </div>
+)}
+
 
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
       <div className="space-y-4">
@@ -308,7 +361,7 @@ return (
               <PlusCircle size={18} /> Agregar producto
             </button>
 
-            <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
+            <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
               <ProductListTable
                 products={products}
                 onDelete={async (id) => {
@@ -323,28 +376,11 @@ return (
                 editingProductId={editingProductId}
                 editingPrice={editingPrice}
                 setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={async () => {
-                  const newPrice = parseFloat(editingPrice);
-                  if (isNaN(newPrice)) return;
-                  const updated = products.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setProducts(updated);
-                  await supabase
-                    .from('products')
-                    .update({ price: newPrice })
-                    .eq('id', editingProductId);
+                onApplyPriceUpdate={applyPriceUpdate}
 
-                  const updatedCart = cartItems.map(p =>
-                    p.id === editingProductId ? { ...p, price: newPrice } : p
-                  );
-                  setCartItems(updatedCart);
-
-                  setEditingProductId(null);
-                  setEditingPrice('');
-                }}
                 categories={categories}
                 setProducts={setProducts}
+                onAddToCart={addToCart} // ✅ esta es la que falta
                 setEditingProductId={setEditingProductId}
                 onDeleteCategory={handleDeleteCategory}
                 onEditCategory={handleEditCategory}
@@ -378,7 +414,7 @@ return (
 
         {!showHistory && !showProductTable && confirmedStoreName && (
           <>
-            <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-4 relative z-20">
+              <div className="bg-[#111827] border border-gray-800 rounded-3xl shadow-2xl p-6 space-y-6">
               <CategorySelector
                 categories={categories}
                 activeCategory={activeCategory}
@@ -391,52 +427,47 @@ return (
               <input
                 type="text"
                 placeholder="🔍 Buscar productos..."
-                className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white placeholder-gray-400 shadow-inner focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full p-3 border border-gray-700 rounded-lg bg-[#0b1728] text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 outline-none shadow-inner"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6 relative z-10">
-  <ProductList
-    products={filteredProducts}
-    onAddToCart={addToCart}
-    onDelete={async (id) => {
-      const updated = products.filter(p => p.id !== id);
-      setProducts(updated);
-      await supabase.from('products').delete().eq('id', id);
-    }}
-    onStartEditPrice={(id, price) => {
-      setEditingProductId(id);
-      setEditingPrice(price.toString());
-    }}
-    editingProductId={editingProductId}
-    editingPrice={editingPrice}
-    setEditingPrice={setEditingPrice}
-    onApplyPriceUpdate={async () => {
-      const newPrice = parseFloat(editingPrice);
-      if (isNaN(newPrice)) return;
-      const updated = products.map(p =>
-        p.id === editingProductId ? { ...p, price: newPrice } : p
-      );
-      setProducts(updated);
-      await supabase
-        .from('products')
-        .update({ price: newPrice })
-        .eq('id', editingProductId);
+            <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6 relative z-10">
+<ProductListTable
+  products={filteredProducts}
+  onAddToCart={addToCart}
+  onDelete={async (id) => {
+    const updated = products.filter(p => p.id !== id);
+    setProducts(updated);
+    await supabase.from('products').delete().eq('id', id);
+  }}
+  onStartEditPrice={(id, price) => {
+    setEditingProductId(id);
+    setEditingPrice(price.toString());
+  }}
+  editingProductId={editingProductId}
+  editingPrice={editingPrice}
+  setEditingPrice={setEditingPrice}
+onApplyPriceUpdate={applyPriceUpdate}
+  categories={categories}
+  setProducts={setProducts}
+  setEditingProductId={setEditingProductId}
+  onDeleteCategory={handleDeleteCategory}
+  onEditCategory={handleEditCategory}
+  onUpdateProductCategory={async (id, newCategory) => {
+    const updated = products.map(p =>
+      p.id === id ? { ...p, category: newCategory } : p
+    );
+    setProducts(updated);
+    await supabase.from('products').update({ category: newCategory }).eq('id', id);
+  }}
+  onOpenCategoryChange={(id) => {
+    setCategoryProductId(id);
+    setShowCategoryModal(true);
+  }}
+/>
 
-      const updatedCart = cartItems.map(p =>
-        p.id === editingProductId ? { ...p, price: newPrice } : p
-      );
-      setCartItems(updatedCart);
 
-      setEditingProductId(null);
-      setEditingPrice('');
-    }}
-    onOpenCategoryChange={(id) => {
-      setCategoryProductId(id);
-      setShowCategoryModal(true);
-    }}
-  />
 </div>
           </>
         )}
@@ -445,21 +476,21 @@ return (
 {showAddModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
     <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
-      <AddProductModal
-        categories={categories}
-        onClose={() => setShowAddModal(false)}
-        onAdd={(product) => {
-          const updated = [...products, product];
-          setProducts(updated);
+<AddProductModal
+  categories={categories}
+  onClose={() => setShowAddModal(false)}
+  onAdd={(product) => {
+    const updated = [...products, product];
+    setProducts(updated);
 
-          if (!categories.includes(product.category)) {
-            const updatedCats = [...categories, product.category];
-            setCategories(updatedCats);
-          }
+    if (!categories.includes(product.category)) {
+      const updatedCats = [...categories, product.category];
+      setCategories(updatedCats);
+    }
 
-          setShowAddModal(false);
-        }}
-      />
+    setShowAddModal(false);
+  }}
+/>
     </div>
   </div>
 )}
@@ -467,7 +498,7 @@ return (
 
 
         {showHistory && (
-          <div className="bg-gray-900/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
+          <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
 <SalesHistory
   onBack={() => setShowHistory(false)}
   onClear={() => setShowHistory(false)}
@@ -483,7 +514,12 @@ return (
         {selectedSale && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white border rounded-2xl shadow-lg p-6 max-w-md w-full">
-              <TicketView sale={selectedSale} onClose={() => setSelectedSale(null)} />
+            <TicketView
+              sale={selectedSale}
+              onClose={() => setSelectedSale(null)}
+              storeName={confirmedStoreName} // ✅ PASALO DESDE ACA
+            />
+
             </div>
           </div>
         )}
@@ -543,30 +579,41 @@ return (
           );
         }
       }}
-      onConfirm={async (sale) => {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          alert("Usuario no autenticado");
-          return;
-        }
 
-        const { error } = await supabase.from("sales").insert({
-          user_id: user.id,
-          items: sale.items,
-          total: sale.total,
-          discount: sale.discount,
-        });
+onConfirm={async (sale) => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-        if (error) {
-          alert("Error al guardar venta: " + error.message);
-        } else {
-          setSelectedSale(sale);
-          setShowHistory(false);
-          setShowProductTable(false);
-        }
-      }}
+  if (!user) {
+    alert("Usuario no autenticado");
+    return;
+  }
+
+  const { data: insertedSale, error } = await supabase
+    .from("sales")
+    .insert({
+      user_id: user.id,
+      items: sale.items,
+      total: sale.total,
+      discount: sale.discount,
+    })
+    .select()
+    .single(); // 👈 trae directamente un solo objeto
+
+  if (error || !insertedSale) {
+    alert("Error al guardar venta: " + (error?.message || "Sin datos"));
+    return;
+  }
+
+  // ✅ Seteamos la venta real con ID y fecha
+  setSelectedSale(insertedSale);
+  setShowHistory(false);
+  setShowProductTable(false);
+  setTimeout(() => setShowCartMobile(false), 500);
+}}
+
+
     />
   </div>
 )}
@@ -586,13 +633,12 @@ return (
   </button>
 )}
 
-
 <div
   className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ${
     showCartMobile ? 'translate-x-0' : 'translate-x-full'
   } flex justify-end bg-black/40`}
 >
-  <div className="w-full max-w-sm h-full bg-gray-900 text-white shadow-lg p-4 overflow-y-auto">
+  <div className="w-full max-w-sm h-full bg-[#0b1728] text-white shadow-lg p-4 overflow-y-auto">
     <button
       onClick={() => setShowCartMobile(false)}
       className="text-red-500 mb-4 font-semibold"
@@ -614,16 +660,42 @@ return (
           );
         }
       }}
-      onConfirm={(sale) => {
-        setSelectedSale(sale);
+      onConfirm={async (sale) => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          alert("Usuario no autenticado");
+          return;
+        }
+
+        const { data: insertedSale, error } = await supabase
+          .from("sales")
+          .insert({
+            user_id: user.id,
+            items: sale.items,
+            total: sale.total,
+            discount: sale.discount,
+          })
+          .select()
+          .single();
+
+        if (error || !insertedSale) {
+          alert("Error al guardar venta: " + (error?.message || "Sin datos"));
+          return;
+        }
+
+        setSelectedSale(insertedSale);
         setShowHistory(false);
         setShowProductTable(false);
-        // Esperá unos ms antes de cerrar el panel para asegurar la ejecución
         setTimeout(() => setShowCartMobile(false), 500);
       }}
     />
   </div>
 </div>
+
+
 
 
       {!showHistory && !showProductTable && confirmedStoreName && (
@@ -651,7 +723,7 @@ return (
     onClick={() => setShowCartMobile(false)} // Cierra al tocar fuera del carrito
   >
     <div
-      className="w-full max-w-sm h-full bg-gray-900 text-white shadow-lg p-4 overflow-y-auto"
+      className="w-full max-w-sm h-full bg-[#0b1728] text-white shadow-lg p-4 overflow-y-auto"
       onClick={(e) => e.stopPropagation()} // Evita que clic dentro lo cierre
     >
       <button

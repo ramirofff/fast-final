@@ -6,12 +6,16 @@ import { Sale } from '../types';
 interface TicketViewProps {
   sale: Sale;
   onClose: () => void;
+  storeName: string;
 }
 
-export default function TicketView({ sale, onClose }: TicketViewProps) {
+export default function TicketView({ sale, onClose, storeName }: TicketViewProps) {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    const date = new Date(sale.created_at);
+    const ticketNumber = sale.id?.slice(0, 8).toUpperCase() || Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
 
     const html = `
       <html>
@@ -51,12 +55,19 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
               font-weight: bold;
               font-size: 1.1em;
             }
+            .logo {
+              display: block;
+              margin: 0 auto 10px;
+              max-width: 100px;
+            }
           </style>
         </head>
         <body>
-          <h2>Ticket de Compra</h2>
-          <p>Fecha: ${new Date(sale.created_at).toLocaleDateString()}</p>
-          <p>Hora: ${new Date(sale.created_at).toLocaleTimeString()}</p>
+          <img src="/logo.png" alt="Logo" class="logo" />
+          <h2>${storeName || 'Ticket de Compra'}</h2>
+          <p>N° Ticket: ${ticketNumber}</p>
+          <p>Fecha: ${date.toLocaleDateString()}</p>
+          <p>Hora: ${date.toLocaleTimeString()}</p>
           <table>
             <thead>
               <tr><th>Producto</th><th>Precio</th></tr>
@@ -88,13 +99,20 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
     };
   };
 
+  const date = new Date(sale.created_at);
+  const ticketNumber = sale.id?.slice(0, 8).toUpperCase() || Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+
   return (
-    <div className="text-sm font-mono">
-      <div className="bg-gray-900 text-white p-4 border border-gray-700 rounded-xl shadow-lg w-full max-w-sm mx-auto">
-        <h2 className="text-center font-bold text-lg mb-2 text-blue-400">Ticket de Compra</h2>
+    <div className="text-sm font-mono motion-safe:animate-fade-in duration-300">
+      <div className="bg-[#0b1728] text-white p-4 border border-gray-700 rounded-xl shadow-lg w-full max-w-sm mx-auto">
+        <div className="flex justify-center mb-2">
+          <img src="/logo.png" alt="Logo" className="h-12" />
+        </div>
+        <h2 className="text-center font-bold text-lg mb-2 text-blue-400">{storeName || 'Ticket de Compra'}</h2>
+        <p className="text-center mb-1 text-gray-400">N° Ticket: {ticketNumber}</p>
         <p className="text-center mb-4 text-gray-300">
-          Fecha: {new Date(sale.created_at).toLocaleDateString()}<br />
-          Hora: {new Date(sale.created_at).toLocaleTimeString()}
+          Fecha: {date.toLocaleDateString()}<br />
+          Hora: {date.toLocaleTimeString()}
         </p>
         <table className="w-full text-left mb-4">
           <thead>
@@ -125,13 +143,13 @@ export default function TicketView({ sale, onClose }: TicketViewProps) {
         <div className="flex justify-between mt-4 print:hidden">
           <button
             onClick={onClose}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
+            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded transition hover:scale-105"
           >
             Cerrar
           </button>
           <button
             onClick={handlePrint}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition hover:scale-105"
           >
             Imprimir ticket
           </button>

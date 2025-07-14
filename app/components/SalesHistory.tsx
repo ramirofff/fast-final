@@ -66,7 +66,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({
   const totalThisMonth = salesThisMonth.reduce((sum, sale) => sum + sale.total, 0);
 
   return (
-    <div className="bg-gray-900 text-white rounded-lg p-4 shadow-md">
+    <div className="bg-[#0b1728] text-white rounded-lg p-4 shadow-md">
       <h2 className="text-2xl font-bold text-center text-blue-400 mb-2">
         Administración de Ventas
       </h2>

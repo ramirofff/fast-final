@@ -25,7 +25,7 @@ export default function CategoryChangeModal({
   };
 
   return (
-    <div className="space-y-4 bg-gray-900 text-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+    <div className="space-y-4 bg-[#0b1728] text-white p-6 rounded-xl shadow-lg w-full max-w-sm">
       <h2 className="text-xl font-bold text-center">Asignar categoría</h2>
 
       <select

@@ -4,6 +4,8 @@ export interface Product {
   price: number;
   image: string;        // Puede venir de image_url en Supabase
   category: string;
+  originalPrice?: number; // 👈 Agregado para permitir mostrar precios anteriores
+
 }
 
 export interface CartItem extends Product {
@@ -11,10 +13,12 @@ export interface CartItem extends Product {
 }
 
 export interface Sale {
-  id?: string; // opcional porque lo pone Supabase automáticamente
-  created_at: string; // viene de Supabase como timestamp ISO
-  items: Product[];   // serializado como JSON en la base de datos
+  id?: string;
+  created_at: string;
+  timestamp?: string; // ✅ agregado
+  items: Product[];
   total: number;
   discount: number;
-  user_id?: string; // útil para distinguir por vendedor si usás múltiples cuentas
+  user_id?: string;
 }
+

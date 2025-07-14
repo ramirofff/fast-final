@@ -5,7 +5,7 @@
 /* Estilos base */
 @layer base {
   body {
-    @apply font-sans text-white bg-gray-900;
+    @apply font-sans text-white bg-[#0b1728];
   }
 
   h1, h2, h3, h4, h5, h6 {

@@ -7,16 +7,17 @@ import CartItemRow from './CartItemRow';
 import { PercentCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-
 interface CartProps {
   cart: CartItem[];
   onClear: () => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onConfirm: (sale: {
+    id: string;
     created_at: string;
     items: Product[];
     total: number;
     discount: number;
+    user_id: string;
   }) => void;
 }
 
@@ -56,31 +57,39 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
     setIsProcessingPayment(true);
 
     paymentTimeoutRef.current = setTimeout(async () => {
-      const sale = {
-        created_at: new Date().toISOString(),
-        items: cart.flatMap(item =>
-          Array(item.quantity).fill({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            image: item.image,
-            category: item.category,
-          })
-        ),
-        total,
-        discount: numericDiscount,
-      };
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const { error } = await supabase.from('sales').insert([{
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        items: sale.items,
-        total: sale.total,
-        discount: sale.discount,
-        created_at: sale.created_at,
-      }]);
+      if (!user) {
+        alert('Usuario no autenticado');
+        setIsProcessingPayment(false);
+        return;
+      }
 
-      if (error) {
-        alert('Error al guardar la venta');
+      const saleItems: Product[] = cart.flatMap(item =>
+        Array(item.quantity).fill({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          image: item.image,
+          category: item.category,
+        })
+      );
+
+      const { data: inserted, error } = await supabase
+        .from('sales')
+        .insert({
+          user_id: user.id,
+          items: saleItems,
+          total,
+          discount: numericDiscount,
+        })
+        .select()
+        .single();
+
+      if (error || !inserted) {
+        alert('Error al guardar la venta: ' + (error?.message || 'Sin datos'));
         setIsProcessingPayment(false);
         return;
       }
@@ -88,7 +97,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
       setShowReceipt(true);
       setShowSimulatedQR(false);
       setIsProcessingPayment(false);
-      onConfirm(sale);
+      onConfirm(inserted); // ✅ Pasamos la venta insertada con ID y timestamp
       onClear();
     }, 3000);
   };
@@ -129,13 +138,18 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
           </div>
 
           <div className="mt-2 text-sm font-semibold">
-            Total: <span className={`font-bold ${total <= 0 ? 'text-red-400' : 'text-green-400'}`}>USD ${total.toFixed(2)}</span>
+            Total:{' '}
+            <span className={`font-bold ${total <= 0 ? 'text-red-400' : 'text-green-400'}`}>
+              USD ${total.toFixed(2)}
+            </span>
           </div>
 
           {!showReceipt && !showSimulatedQR && (
             <button
               onClick={simulateStripePayment}
-              className={`mt-2 text-white px-3 py-2 rounded text-sm w-full transition font-semibold ${total <= 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'}`}
+              className={`mt-2 text-white px-3 py-2 rounded text-sm w-full transition font-semibold ${
+                total <= 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+              }`}
               disabled={isProcessingPayment || total <= 0}
             >
               {total <= 0 ? 'Total inválido' : 'Pagar con QR'}

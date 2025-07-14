@@ -23,7 +23,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4">
-      <div className="bg-gray-900 border border-gray-700 p-6 rounded-xl w-full max-w-sm space-y-4 shadow-xl">
+      <div className="bg-[#0b1728] border border-gray-700 p-6 rounded-xl w-full max-w-sm space-y-4 shadow-xl">
         <h2 className="text-xl font-bold text-center">Iniciar sesión</h2>
 
         <input

@@ -1,195 +1,213 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
+import { Pencil, ShoppingCart } from 'lucide-react';
 
-interface ProductListTableProps {
+interface Props {
   products: Product[];
+  onAddToCart: (product: Product) => void;
   onDelete: (id: string) => void;
   onStartEditPrice: (id: string, currentPrice: number) => void;
   editingProductId: string | null;
   editingPrice: string;
   setEditingPrice: (value: string) => void;
   onApplyPriceUpdate: () => void;
+  onOpenCategoryChange: (id: string) => void;
   categories: string[];
-  setProducts: (products: Product[]) => void;
-  setEditingProductId: (id: string | null) => void;
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+  setEditingProductId: React.Dispatch<React.SetStateAction<string | null>>;
   onDeleteCategory: (cat: string) => void;
   onEditCategory: (oldCat: string, newCat: string) => void;
-  onUpdateProductCategory: (id: string, newCategory: string) => void;
-  onOpenCategoryChange: (id: string) => void;
+  onUpdateProductCategory: (id: string, newCat: string) => void;
 }
 
-export default function ProductListTable({
+const ProductListTable: React.FC<Props> = ({
   products,
+  onAddToCart,
   onDelete,
   onStartEditPrice,
   editingProductId,
   editingPrice,
   setEditingPrice,
   onApplyPriceUpdate,
+  onOpenCategoryChange,
   categories,
   setProducts,
   setEditingProductId,
   onDeleteCategory,
   onEditCategory,
   onUpdateProductCategory,
-  onOpenCategoryChange,
-}: ProductListTableProps) {
-  const [editingField, setEditingField] = useState<'name' | 'category' | 'price' | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const [editingCategory, setEditingCategory] = useState('');
-  const [search, setSearch] = useState('');
+}) => {
+  const [showModal, setShowModal] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'price-asc' | 'price-desc'>('name-asc');
 
-  const startEdit = (id: string, field: 'name' | 'category' | 'price', value: string | number) => {
-    setEditingProductId(id);
-    setEditingField(field);
-    if (field === 'name') setEditingName(String(value));
-    if (field === 'category') setEditingCategory(String(value));
-    if (field === 'price') setEditingPrice(String(value));
-  };
-
-  const cancelEdit = () => {
-    setEditingProductId(null);
-    setEditingField(null);
-  };
-
-  const handleSaveName = (id: string) => {
-    const updated = products.map(p => (p.id === id ? { ...p, name: editingName } : p));
-    setProducts(updated);
-    cancelEdit();
-  };
-
-  const handleSaveCategory = (id: string) => {
-    const updated = products.map(p => (p.id === id ? { ...p, category: editingCategory } : p));
-    setProducts(updated);
-    cancelEdit();
-  };
-
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const sortedProducts = [...products].sort((a, b) => {
+    switch (sortOption) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'price-asc':
+        return a.price - b.price;
+      case 'price-desc':
+        return b.price - a.price;
+      default:
+        return 0;
+    }
+  });
 
   return (
-    <div className="space-y-4">
-      <input
-        type="text"
-        placeholder="Buscar producto..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="border px-3 py-2 rounded w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-gray-200 placeholder:text-gray-400"
-      />
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+        <h2 className="text-white text-lg font-semibold">Productos encontrados: {sortedProducts.length}</h2>
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value as typeof sortOption)}
+          className="px-3 py-1 bg-gray-800 text-white border border-gray-600 rounded"
+        >
+          <option value="name-asc">Nombre (A–Z)</option>
+          <option value="name-desc">Nombre (Z–A)</option>
+          <option value="price-asc">Precio (menor a mayor)</option>
+          <option value="price-desc">Precio (mayor a menor)</option>
+        </select>
+      </div>
 
-      <div className="overflow-x-auto bg-gray-900 shadow-lg rounded-xl border border-gray-700">
-        <table className="w-full text-sm text-gray-200">
-          <thead className="bg-gray-800 text-gray-300 border-b border-gray-700">
-            <tr className="text-left">
-              <th className="p-3 font-semibold">Foto</th>
-              <th className="p-3 font-semibold">Nombre</th>
-              <th className="p-3 font-semibold">Categoría</th>
-              <th className="p-3 font-semibold">Precio</th>
-              <th className="p-3 font-semibold">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map(product => (
-              <tr key={product.id} className="border-t border-gray-700 hover:bg-gray-800">
-                <td className="p-3">
+      {sortedProducts.length === 0 ? (
+        <div className="text-center text-gray-400 py-12">
+          😕 No se encontraron productos que coincidan.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {sortedProducts.map((product) => {
+            const showDiscount = product.originalPrice && product.originalPrice > product.price;
+            return (
+              <div
+                key={product.id}
+                className="bg-[#0b1728] text-white p-4 rounded-2xl shadow-md flex flex-col justify-between relative transition hover:shadow-xl border border-gray-700 hover:scale-[1.02] duration-200"
+              >
+                <div className="absolute top-2 right-2 z-10">
+                  <button
+                    onClick={() => setShowModal(product.id)}
+                    className="text-gray-400 hover:text-white transition"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                </div>
+
+                <div className="w-full h-28 mb-2 rounded-xl border border-gray-700 bg-gray-800 flex items-center justify-center overflow-hidden">
                   <img
                     src={product.image || '/no-image.png'}
                     alt={product.name}
-                    className="w-12 h-12 object-cover rounded border border-gray-600"
+                    className="w-full h-full object-cover rounded-xl"
                   />
-                </td>
-                <td className="p-3 w-40">
-                  {editingProductId === product.id && editingField === 'name' ? (
-                    <div className="flex gap-1 items-center">
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        className="border px-2 py-1 rounded w-28 bg-gray-800 text-gray-100"
-                      />
-                      <button
-                        onClick={() => handleSaveName(product.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
-                      >✔</button>
-                      <button
-                        onClick={cancelEdit}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
-                      >✖</button>
-                    </div>
+                </div>
+
+                <h3 className="font-semibold text-base truncate" title={product.name}>{product.name}</h3>
+                <p className="text-xs text-gray-400 mb-1">
+                  {product.category === 'Sin categoría' ? (
+                    <span className="text-red-400">Sin categoría</span>
                   ) : (
-                    <span
-                      onClick={() => startEdit(product.id, 'name', product.name)}
-                      className="cursor-pointer hover:text-blue-400"
-                    >✏️ {product.name}</span>
+                    product.category
                   )}
-                </td>
-                <td className="p-3 w-40">
-                  {editingProductId === product.id && editingField === 'category' ? (
-                    <div className="flex gap-1 items-center">
-                      <select
-                        value={editingCategory}
-                        onChange={(e) => setEditingCategory(e.target.value)}
-                        className="border px-2 py-1 rounded w-28 bg-gray-800 text-gray-100"
-                      >
-                        {categories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleSaveCategory(product.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
-                      >✔</button>
-                      <button
-                        onClick={cancelEdit}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
-                      >✖</button>
-                    </div>
-                  ) : (
-                    <span
-                      onClick={() => startEdit(product.id, 'category', product.category)}
-                      className="cursor-pointer hover:text-blue-400"
-                    >✏️ {product.category}</span>
-                  )}
-                </td>
-                <td className="p-3 w-32">
-                  {editingProductId === product.id && editingField === 'price' ? (
-                    <div className="flex gap-1 items-center">
-                      <input
-                        type="number"
-                        value={editingPrice}
-                        onChange={(e) => setEditingPrice(e.target.value)}
-                        className="border px-2 py-1 rounded w-24 bg-gray-800 text-gray-100"
-                      />
-                      <button
-                        onClick={onApplyPriceUpdate}
-                        className="bg-green-600 hover:bg-green-700 text-white px-2 rounded text-xs"
-                      >✔</button>
-                      <button
-                        onClick={cancelEdit}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded text-xs"
-                      >✖</button>
-                    </div>
-                  ) : (
-                    <span
-                      onClick={() => startEdit(product.id, 'price', product.price)}
-                      className="cursor-pointer hover:text-blue-400"
-                    >✏️ ${product.price.toFixed(2)}</span>
-                  )}
-                </td>
-                <td className="p-3">
+                </p>
+
+                {showDiscount ? (
+                  <>
+                    <p className="text-sm text-red-400 line-through">
+                      USD ${product.originalPrice?.toFixed(2)}
+                    </p>
+                    <p className="text-green-400 font-bold text-lg mb-2">
+                      USD ${product.price.toFixed(2)}
+                    </p>
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                      Oferta
+                    </span>
+                  </>
+                ) : (
+                  <p className="text-green-400 font-bold text-lg mb-2">
+                    USD ${product.price.toFixed(2)}
+                  </p>
+                )}
+
+                {editingProductId === product.id ? (
+                  <div className="mb-2">
+                    <input
+                      type="number"
+                      value={editingPrice}
+                      onChange={(e) => setEditingPrice(e.target.value)}
+                      className="border border-gray-500 p-1 rounded w-full mb-1 text-sm text-black"
+                    />
+                    <button
+                      onClick={onApplyPriceUpdate}
+                      className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 text-sm rounded w-full transition"
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ) : (
                   <button
-                    onClick={() => onDelete(product.id)}
-                    className="text-red-500 hover:text-red-600 text-sm hover:underline"
-                  >🗑 Eliminar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    onClick={() => onAddToCart(product)}
+                    className="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded-xl flex items-center justify-center gap-2 transition shadow hover:shadow-md"
+                  >
+                    <ShoppingCart size={16} />
+                    Agregar al carro
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-80">
+            <h2 className="text-lg font-semibold mb-4">¿Qué deseas hacer?</h2>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  const product = products.find(p => p.id === showModal);
+                  if (product) onStartEditPrice(product.id, product.price);
+                  setShowModal(null);
+                }}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg transition"
+              >
+                Modificar precio
+              </button>
+
+              <button
+                onClick={() => {
+                  onOpenCategoryChange(showModal);
+                  setShowModal(null);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+              >
+                Asignar/cambiar categoría
+              </button>
+
+              <button
+                onClick={() => {
+                  onDelete(showModal);
+                  setShowModal(null);
+                }}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
+              >
+                Eliminar producto
+              </button>
+
+              <button
+                onClick={() => setShowModal(null)}
+                className="w-full bg-gray-300 hover:bg-gray-400 text-black py-2 rounded-lg transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
-}
+};
+
+export default ProductListTable;
