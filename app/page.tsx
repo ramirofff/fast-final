@@ -14,6 +14,9 @@ import SalesHistory from './components/SalesHistory';
 import TicketView from './components/TicketView';
 import CategoryChangeModal from './components/CategoryChangeModal';
 import { PlusCircle, Clock, Home } from 'lucide-react';
+import ProductListAdmin from './components/ProductListAdmin';
+
+
 
 
 
@@ -29,6 +32,24 @@ export default function Page() {
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>('');
+  const [editingName, setEditingName] = useState('');
+const applyNameUpdate = async () => {
+  if (!editingProductId || !editingName.trim()) return;
+
+  const updated = products.map((p) =>
+    p.id === editingProductId ? { ...p, name: editingName.trim() } : p
+  );
+  setProducts(updated);
+
+  await supabase
+    .from('products')
+    .update({ name: editingName.trim() })
+    .eq('id', editingProductId);
+
+  setEditingProductId(null);
+  setEditingName('');
+};
+
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
@@ -354,56 +375,74 @@ return (
 
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
       <div className="space-y-4">
-        {showProductTable && (
-          <>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
-            >
-              <PlusCircle size={18} /> Agregar producto
-            </button>
 
-            <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
-              <ProductListTable
-                products={products}
-                onDelete={async (id) => {
-                  const updated = products.filter(p => p.id !== id);
-                  setProducts(updated);
-                  await supabase.from('products').delete().eq('id', id);
-                }}
-                onStartEditPrice={(id, price) => {
-                  setEditingProductId(id);
-                  setEditingPrice(price.toString());
-                }}
-                editingProductId={editingProductId}
-                editingPrice={editingPrice}
-                setEditingPrice={setEditingPrice}
-                onApplyPriceUpdate={applyPriceUpdate}
+{showProductTable && (
+  <>
+    <button
+      onClick={() => setShowAddModal(true)}
+      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
+    >
+      <PlusCircle size={18} /> Agregar producto
+    </button>
 
-                categories={categories}
-                setProducts={setProducts}
-                onAddToCart={addToCart} // ✅ esta es la que falta
-                setEditingProductId={setEditingProductId}
-                onDeleteCategory={handleDeleteCategory}
-                onEditCategory={handleEditCategory}
-                onUpdateProductCategory={async (id, newCategory) => {
-                  const updated = products.map(p =>
-                    p.id === id ? { ...p, category: newCategory } : p
-                  );
-                  setProducts(updated);
-                  await supabase
-                    .from('products')
-                    .update({ category: newCategory })
-                    .eq('id', id);
-                }}
-                onOpenCategoryChange={(id) => {
-                  setCategoryProductId(id);
-                  setShowCategoryModal(true);
-                }}
-              />
-            </div>
-          </>
-        )}
+    <div className="my-4 bg-[#111827] border border-gray-800 rounded-3xl shadow-2xl p-6 space-y-6">
+      <CategorySelector
+        categories={categories}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onEditCategory={handleEditCategory}
+      />
+    </div>
+
+    <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
+      <ProductListAdmin
+        products={activeCategory ? products.filter(p => p.category === activeCategory) : products}
+        onDelete={async (id) => {
+          const updated = products.filter(p => p.id !== id);
+          setProducts(updated);
+          await supabase.from('products').delete().eq('id', id);
+        }}
+        onStartEditPrice={(id, price) => {
+          setEditingProductId(id);
+          setEditingPrice(price.toString());
+        }}
+        editingProductId={editingProductId}
+        editingPrice={editingPrice}
+        setEditingPrice={setEditingPrice}
+        onApplyPriceUpdate={applyPriceUpdate}
+        categories={categories}
+        setProducts={setProducts}
+        setEditingProductId={setEditingProductId}
+        onDeleteCategory={handleDeleteCategory}
+        onEditCategory={handleEditCategory}
+        onUpdateProductCategory={async (id, newCategory) => {
+          const updated = products.map(p =>
+            p.id === id ? { ...p, category: newCategory } : p
+          );
+          setProducts(updated);
+          await supabase
+            .from('products')
+            .update({ category: newCategory })
+            .eq('id', id);
+        }}
+        onOpenCategoryChange={(id) => {
+          setCategoryProductId(id);
+          setShowCategoryModal(true);
+        }}
+        onStartEditName={(id, name) => {
+          setEditingProductId(id);
+          setEditingName(name);
+        }}
+        editingName={editingName}
+        setEditingName={setEditingName}
+        onApplyNameUpdate={applyNameUpdate}
+      />
+    </div>
+  </>
+)}
+
+
 
         {!showHistory && !showProductTable && (
           <Header
@@ -414,65 +453,64 @@ return (
           />
         )}
 
-        {!showHistory && !showProductTable && confirmedStoreName && (
-          <>
-              <div className="bg-[#111827] border border-gray-800 rounded-3xl shadow-2xl p-6 space-y-6">
-              <CategorySelector
-                categories={categories}
-                activeCategory={activeCategory}
-                setActiveCategory={setActiveCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onEditCategory={handleEditCategory}
-              />
-            </div>
-            <div className="p-2">
-              <input
-                type="text"
-                placeholder="🔍 Buscar productos..."
-                className="w-full p-3 border border-gray-700 rounded-lg bg-[#0b1728] text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 outline-none shadow-inner"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6 relative z-10">
-<ProductListTable
-  products={filteredProducts}
-  onAddToCart={addToCart}
-  onDelete={async (id) => {
-    const updated = products.filter(p => p.id !== id);
-    setProducts(updated);
-    await supabase.from('products').delete().eq('id', id);
-  }}
-  onStartEditPrice={(id, price) => {
-    setEditingProductId(id);
-    setEditingPrice(price.toString());
-  }}
-  editingProductId={editingProductId}
-  editingPrice={editingPrice}
-  setEditingPrice={setEditingPrice}
-onApplyPriceUpdate={applyPriceUpdate}
-  categories={categories}
-  setProducts={setProducts}
-  setEditingProductId={setEditingProductId}
-  onDeleteCategory={handleDeleteCategory}
-  onEditCategory={handleEditCategory}
-  onUpdateProductCategory={async (id, newCategory) => {
-    const updated = products.map(p =>
-      p.id === id ? { ...p, category: newCategory } : p
-    );
-    setProducts(updated);
-    await supabase.from('products').update({ category: newCategory }).eq('id', id);
-  }}
-  onOpenCategoryChange={(id) => {
-    setCategoryProductId(id);
-    setShowCategoryModal(true);
-  }}
-/>
+{!showHistory && !showProductTable && confirmedStoreName && (
+  <>
+    <div className="bg-[#111827] border border-gray-800 rounded-3xl shadow-2xl p-6 space-y-6">
+      <CategorySelector
+        categories={categories}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onEditCategory={handleEditCategory}
+      />
+    </div>
+    <div className="p-2">
+      <input
+        type="text"
+        placeholder="🔍 Buscar productos..."
+        className="w-full p-3 border border-gray-700 rounded-lg bg-[#0b1728] text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 outline-none shadow-inner"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+    <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6 relative z-10">
+      <ProductListTable
+        products={filteredProducts}
+        onAddToCart={addToCart}
+        onDelete={async (id) => {
+          const updated = products.filter(p => p.id !== id);
+          setProducts(updated);
+          await supabase.from('products').delete().eq('id', id);
+        }}
+        onStartEditPrice={(id, price) => {
+          setEditingProductId(id);
+          setEditingPrice(price.toString());
+        }}
+        editingProductId={editingProductId}
+        editingPrice={editingPrice}
+        setEditingPrice={setEditingPrice}
+        onApplyPriceUpdate={applyPriceUpdate}
+        categories={categories}
+        setProducts={setProducts}
+        setEditingProductId={setEditingProductId}
+        onDeleteCategory={handleDeleteCategory}
+        onEditCategory={handleEditCategory}
+        onUpdateProductCategory={async (id, newCategory) => {
+          const updated = products.map(p =>
+            p.id === id ? { ...p, category: newCategory } : p
+          );
+          setProducts(updated);
+          await supabase.from('products').update({ category: newCategory }).eq('id', id);
+        }}
+        onOpenCategoryChange={(id) => {
+          setCategoryProductId(id);
+          setShowCategoryModal(true);
+        }}
+      />
+    </div>
+  </>
+)}
 
-
-</div>
-          </>
-        )}
 
 
 {showAddModal && (
@@ -492,7 +530,9 @@ onApplyPriceUpdate={applyPriceUpdate}
 
     setShowAddModal(false);
   }}
+  setCategories={setCategories} // ✅ ESTO ES LO QUE FALTABA
 />
+
     </div>
   </div>
 )}

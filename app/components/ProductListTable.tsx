@@ -160,52 +160,53 @@ const ProductListTable: React.FC<Props> = ({
         </div>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-80">
-            <h2 className="text-lg font-semibold mb-4">¿Qué deseas hacer?</h2>
-            <div className="space-y-2">
-              <button
-                onClick={() => {
-                  const product = products.find(p => p.id === showModal);
-                  if (product) onStartEditPrice(product.id, product.price);
-                  setShowModal(null);
-                }}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg transition"
-              >
-                Modificar precio
-              </button>
+{showModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+    <div className="bg-[#1e293b] text-white rounded-xl shadow-xl p-6 w-80">
+      <h2 className="text-lg font-semibold mb-4">¿Qué deseas hacer?</h2>
+      <div className="space-y-2">
+        <button
+          onClick={() => {
+            const product = products.find(p => p.id === showModal);
+            if (product) onStartEditPrice(product.id, product.price);
+            setShowModal(null);
+          }}
+          className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded-lg transition"
+        >
+          Modificar precio
+        </button>
 
-              <button
-                onClick={() => {
-                  onOpenCategoryChange(showModal);
-                  setShowModal(null);
-                }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
-              >
-                Asignar/cambiar categoría
-              </button>
+        <button
+          onClick={() => {
+            onOpenCategoryChange(showModal);
+            setShowModal(null);
+          }}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+        >
+          Asignar/cambiar categoría
+        </button>
 
-              <button
-                onClick={() => {
-                  onDelete(showModal);
-                  setShowModal(null);
-                }}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
-              >
-                Eliminar producto
-              </button>
+        <button
+          onClick={() => {
+            onDelete(showModal);
+            setShowModal(null);
+          }}
+          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
+        >
+          Eliminar producto
+        </button>
 
-              <button
-                onClick={() => setShowModal(null)}
-                className="w-full bg-gray-300 hover:bg-gray-400 text-black py-2 rounded-lg transition"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        <button
+          onClick={() => setShowModal(null)}
+          className="w-full bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg transition"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </>
   );
 };
