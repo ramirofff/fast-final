@@ -308,11 +308,13 @@ return (
     {/* Botón para ADMINISTRACIÓN DE PRODUCTOS */}
     <button
       onClick={() => {
-        setShowProductTable(true);     // Muestra tabla de productos
-        setShowHistory(false);         // Oculta historial
-        setSelectedSale(null);         // Limpia ticket
-        setShowCartMobile(false);      // Oculta carrito móvil
-        setShowAddModal(false);        // Oculta modal si quedó abierto
+      setShowProductTable(true);
+      setShowHistory(false);
+      setSelectedSale(null);
+      setShowCartMobile(false);
+      setShowAddModal(false);
+      setActiveCategory(''); // <--- AGREGÁ ESTO
+      setSearchQuery('');    // <--- Y ESTO TAMBIÉN
       }}
       className="hover:scale-110 transition-transform"
     >
