@@ -31,24 +31,29 @@ export default function Page() {
   const [categories, setCategories] = useState<string[]>(['Sin categoría']);
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingPriceProductId, setEditingPriceProductId] = useState<string | null>(null);
+  const [editingNameProductId, setEditingNameProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>('');
   const [editingName, setEditingName] = useState('');
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
 const applyNameUpdate = async () => {
-  if (!editingProductId || !editingName.trim()) return;
+  if (!editingNameProductId || !editingName.trim()) return;
 
   const updated = products.map((p) =>
-    p.id === editingProductId ? { ...p, name: editingName.trim() } : p
+    p.id === editingNameProductId ? { ...p, name: editingName.trim() } : p
   );
   setProducts(updated);
 
   await supabase
     .from('products')
     .update({ name: editingName.trim() })
-    .eq('id', editingProductId);
+    .eq('id', editingNameProductId);
 
-  setEditingProductId(null);
+  setEditingNameProductId(null);
   setEditingName('');
 };
+
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -75,10 +80,13 @@ const applyNameUpdate = async () => {
 
   // Carga productos del usuario autenticado
 
+
 useEffect(() => {
   if (!session?.user) return;
 
   const fetchData = async () => {
+    setLoadingProducts(true); // ⬅️ empieza la carga
+
     try {
       // Cargar nombre del local
       const { data: profile, error: profileError } = await supabase
@@ -109,8 +117,7 @@ useEffect(() => {
           price: p.price,
           category: p.category,
           image: p.image_url,
-            originalPrice: p.original_price || undefined, // ✅ esto faltaba
-
+          originalPrice: p.original_price || undefined,
         }));
         setProducts(mapped);
       }
@@ -129,11 +136,14 @@ useEffect(() => {
       }
     } catch (err) {
       console.error('Error general en fetchData:', err);
+    } finally {
+      setLoadingProducts(false); // ⬅️ termina la carga
     }
   };
 
   fetchData();
 }, [session]);
+
 
 
   const addToCart = (product: Product) => {
@@ -272,16 +282,16 @@ const handleEditCategory = async (oldCat: string, newCat: string) => {
 
 const applyPriceUpdate = async () => {
   const newPrice = parseFloat(editingPrice);
-  if (isNaN(newPrice) || !editingProductId) return;
+  if (isNaN(newPrice) || !editingPriceProductId) return;
 
-  const originalProduct = products.find(p => p.id === editingProductId);
+  const originalProduct = products.find(p => p.id === editingPriceProductId);
   if (!originalProduct) return;
 
   const prevOriginal = originalProduct.originalPrice ?? originalProduct.price;
   const showDiscount = prevOriginal > newPrice;
 
   const updatedProducts = products.map(p =>
-    p.id === editingProductId
+    p.id === editingPriceProductId
       ? {
           ...p,
           price: newPrice,
@@ -297,17 +307,18 @@ const applyPriceUpdate = async () => {
       price: newPrice,
       original_price: showDiscount ? prevOriginal : null,
     })
-    .eq('id', editingProductId);
+    .eq('id', editingPriceProductId);
 
   setCartItems(prev =>
     prev.map(p =>
-      p.id === editingProductId ? { ...p, price: newPrice } : p
+      p.id === editingPriceProductId ? { ...p, price: newPrice } : p
     )
   );
 
-  setEditingProductId(null);
+  setEditingPriceProductId(null);
   setEditingPrice('');
 };
+
 
 
   const filteredProducts = products.filter(
@@ -320,6 +331,13 @@ if (!session) {
   return <Login onLogin={() => location.reload()} />;
 }
 
+if (loadingProducts) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <p className="text-lg animate-pulse">Cargando productos...</p>
+    </div>
+  );
+}
 
 return (
 <main className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1c1c1c] to-[#111] text-white p-4 font-sans max-w-7xl mx-auto transition-all duration-500 ease-in-out">
@@ -376,14 +394,47 @@ return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 pt-20">
       <div className="space-y-4">
 
+
 {showProductTable && (
   <>
-    <button
-      onClick={() => setShowAddModal(true)}
-      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
-    >
-      <PlusCircle size={18} /> Agregar producto
-    </button>
+    <div className="flex items-center gap-4">
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
+      >
+        <PlusCircle size={18} /> Agregar producto
+      </button>
+
+      <button
+        onClick={async () => {
+          const { data: userData } = await supabase.auth.getUser();
+          const userId = userData?.user?.id;
+          if (!userId) return;
+
+          const emptyCategories = categories.filter(
+            cat =>
+              cat !== 'Sin categoría' &&
+              !products.some(p => p.category === cat)
+          );
+
+          for (const cat of emptyCategories) {
+            await supabase
+              .from('categories')
+              .delete()
+              .eq('user_id', userId)
+              .eq('name', cat);
+          }
+
+          const updated = categories.filter(cat => !emptyCategories.includes(cat));
+          setCategories(updated);
+
+          alert(`Se eliminaron ${emptyCategories.length} categorías vacías.`);
+        }}
+        className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-full shadow transition"
+      >
+        🗑 Borrar categorías vacías
+      </button>
+    </div>
 
     <div className="my-4 bg-[#111827] border border-gray-800 rounded-3xl shadow-2xl p-6 space-y-6">
       <CategorySelector
@@ -398,50 +449,39 @@ return (
     <div className="bg-[#0b1728]/80 backdrop-blur border border-gray-700 rounded-2xl shadow-lg p-6">
       <ProductListAdmin
         products={activeCategory ? products.filter(p => p.category === activeCategory) : products}
+        setProducts={setProducts}
         onDelete={async (id) => {
           const updated = products.filter(p => p.id !== id);
           setProducts(updated);
           await supabase.from('products').delete().eq('id', id);
         }}
         onStartEditPrice={(id, price) => {
-          setEditingProductId(id);
+          setEditingPriceProductId(id);
           setEditingPrice(price.toString());
+          setEditingNameProductId(null); // Desactiva edición de nombre
         }}
-        editingProductId={editingProductId}
+        onStartEditName={(id, name) => {
+          setEditingNameProductId(id);
+          setEditingName(name);
+          setEditingPriceProductId(null); // Desactiva edición de precio
+        }}
+        editingPriceProductId={editingPriceProductId}
+        editingNameProductId={editingNameProductId}
         editingPrice={editingPrice}
         setEditingPrice={setEditingPrice}
         onApplyPriceUpdate={applyPriceUpdate}
+        editingName={editingName}
+        setEditingName={setEditingName}
+        onApplyNameUpdate={applyNameUpdate}
         categories={categories}
-        setProducts={setProducts}
-        setEditingProductId={setEditingProductId}
-        onDeleteCategory={handleDeleteCategory}
-        onEditCategory={handleEditCategory}
-        onUpdateProductCategory={async (id, newCategory) => {
-          const updated = products.map(p =>
-            p.id === id ? { ...p, category: newCategory } : p
-          );
-          setProducts(updated);
-          await supabase
-            .from('products')
-            .update({ category: newCategory })
-            .eq('id', id);
-        }}
         onOpenCategoryChange={(id) => {
           setCategoryProductId(id);
           setShowCategoryModal(true);
         }}
-        onStartEditName={(id, name) => {
-          setEditingProductId(id);
-          setEditingName(name);
-        }}
-        editingName={editingName}
-        setEditingName={setEditingName}
-        onApplyNameUpdate={applyNameUpdate}
       />
     </div>
   </>
 )}
-
 
 
         {!showHistory && !showProductTable && (

@@ -8,20 +8,17 @@ interface ProductListAdminProps {
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   onDelete: (id: string) => void;
   onStartEditPrice: (id: string, currentPrice: number) => void;
-  editingProductId: string | null;
+  onStartEditName: (id: string, currentName: string) => void;
+  editingPriceProductId: string | null;
+  editingNameProductId: string | null;
   editingPrice: string;
+  editingName: string;
   setEditingPrice: (value: string) => void;
-  setEditingProductId: (value: string | null) => void;
+  setEditingName: (value: string) => void;
   onApplyPriceUpdate: () => void;
+  onApplyNameUpdate: () => void;
   categories: string[];
   onOpenCategoryChange: (id: string) => void;
-  onDeleteCategory?: (category: string) => void;
-  onEditCategory?: (oldCategory: string, newCategory: string) => void;
-  onUpdateProductCategory?: (productId: string, newCategory: string) => void;
-  onStartEditName: (id: string, currentName: string) => void;
-  editingName: string;
-  setEditingName: (value: string) => void;
-  onApplyNameUpdate: () => void;
 }
 
 export default function ProductListAdmin({
@@ -29,20 +26,17 @@ export default function ProductListAdmin({
   setProducts,
   onDelete,
   onStartEditPrice,
-  editingProductId,
+  onStartEditName,
+  editingPriceProductId,
+  editingNameProductId,
   editingPrice,
+  editingName,
   setEditingPrice,
-  setEditingProductId,
+  setEditingName,
   onApplyPriceUpdate,
+  onApplyNameUpdate,
   categories,
   onOpenCategoryChange,
-  onDeleteCategory,
-  onEditCategory,
-  onUpdateProductCategory,
-  onStartEditName,
-  editingName,
-  setEditingName,
-  onApplyNameUpdate,
 }: ProductListAdminProps) {
   return (
     <div className="overflow-x-auto mt-4 rounded-2xl border border-gray-700 bg-[#0b1728]">
@@ -67,7 +61,7 @@ export default function ProductListAdmin({
                 )}
               </td>
               <td className="px-4 py-3 align-top">
-                {editingProductId === product.id ? (
+                {editingNameProductId === product.id ? (
                   <div className="flex gap-2 items-start">
                     <input
                       type="text"
@@ -83,7 +77,6 @@ export default function ProductListAdmin({
                     </button>
                     <button
                       onClick={() => {
-                        setEditingProductId(null);
                         setEditingName('');
                       }}
                       className="text-sm text-gray-400 hover:text-white"
@@ -104,7 +97,7 @@ export default function ProductListAdmin({
                 )}
               </td>
               <td className="px-4 py-3 align-top">
-                {editingProductId === product.id ? (
+                {editingPriceProductId === product.id ? (
                   <div className="flex gap-2 items-start">
                     <input
                       type="number"
@@ -120,7 +113,6 @@ export default function ProductListAdmin({
                     </button>
                     <button
                       onClick={() => {
-                        setEditingProductId(null);
                         setEditingPrice('');
                       }}
                       className="text-sm text-gray-400 hover:text-white"
