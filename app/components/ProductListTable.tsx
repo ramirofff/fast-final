@@ -64,7 +64,7 @@ const ProductListTable: React.FC<Props> = ({
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value as typeof sortOption)}
-          className="px-3 py-1 bg-gray-800 text-white border border-gray-600 rounded"
+          className="px-4 py-2 bg-gradient-to-br from-[#1a1f3c] to-[#0b1728] text-white border-2 border-blue-500/20 rounded-xl shadow-lg focus:outline-none focus:border-blue-500/40 transition-all duration-300"
         >
           <option value="name-asc">Nombre (A–Z)</option>
           <option value="name-desc">Nombre (Z–A)</option>
@@ -162,7 +162,7 @@ const ProductListTable: React.FC<Props> = ({
 
 {showModal && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-    <div className="bg-[#1e293b] text-white rounded-xl shadow-xl p-6 w-80">
+    <div className="bg-gradient-to-br from-[#1a1f3c] to-[#0b1728] text-white rounded-3xl shadow-2xl p-8 w-96 border-2 border-blue-500/20">
       <h2 className="text-lg font-semibold mb-4">¿Qué deseas hacer?</h2>
       <div className="space-y-2">
         <button

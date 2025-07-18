@@ -79,7 +79,7 @@ const CategorySelector: React.FC<Props> = ({
           {/* Menú contextual */}
           {cat !== 'Sin categoría' && cat !== 'Todas' && menuOpenFor === cat && (
             <div
-              className="absolute z-10 top-full mt-1 left-0 bg-[#0b1728] border border-gray-700 rounded shadow-lg w-56"
+              className="absolute z-50 top-full mt-2 left-1/2 -translate-x-1/2 bg-[#0b1728] border-2 border-blue-500/20 rounded-xl shadow-2xl w-56 backdrop-blur-sm"
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >

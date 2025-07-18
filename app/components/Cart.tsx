@@ -107,7 +107,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
   };
 
   return (
-    <div className="flex flex-col gap-3 max-w-[280px] w-full text-white bg-gray-800 p-4 rounded-lg shadow-md animate-fade-in">
+    <div className="flex flex-col gap-4 max-w-[320px] w-full text-white bg-gradient-to-br from-[#1a1f3c] to-[#0b1728] p-6 rounded-3xl shadow-2xl animate-fade-in border-2 border-blue-500/20">
       <h3 className="text-lg font-bold mb-1 border-b pb-1 border-gray-600">Carrito</h3>
 
       {cart.length === 0 ? (
@@ -125,14 +125,14 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
           </ul>
 
           <div className="mt-2 relative">
-            <label className="block text-xs text-gray-300 mb-1 flex items-center gap-1">
+            <label className="text-xs text-gray-300 mb-1 flex items-center gap-1">
               <PercentCircle size={14} className="text-yellow-400" /> Descuento:
             </label>
             <input
               type="number"
               value={discount}
               onChange={e => setDiscount(e.target.value)}
-              className="w-full px-2 py-1 text-sm bg-gray-700 text-white border border-gray-500 rounded"
+              className="w-full px-4 py-2 text-sm bg-[#0b1728] text-white border-2 border-blue-500/20 rounded-xl shadow-lg focus:outline-none focus:border-blue-500/40 transition-all duration-300"
               placeholder="Ingrese descuento manual"
             />
           </div>
@@ -147,8 +147,8 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
           {!showReceipt && !showSimulatedQR && (
             <button
               onClick={simulateStripePayment}
-              className={`mt-2 text-white px-3 py-2 rounded text-sm w-full transition font-semibold ${
-                total <= 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+              className={`mt-4 text-white px-4 py-3 rounded-xl text-sm w-full transition-all duration-300 font-semibold shadow-lg ${
+                total <= 0 ? 'bg-gray-500/50 cursor-not-allowed border-2 border-gray-600/20' : 'bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 border-2 border-purple-500/20 hover:border-purple-500/40 hover:shadow-purple-500/20'
               }`}
               disabled={isProcessingPayment || total <= 0}
             >
@@ -169,7 +169,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
           {showReceipt && (
             <button
               onClick={handlePrint}
-              className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm w-full"
+              className="mt-4 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white px-4 py-3 rounded-xl text-sm w-full transition-all duration-300 font-semibold shadow-lg border-2 border-blue-500/20 hover:border-blue-500/40 hover:shadow-blue-500/20"
             >
               Imprimir ticket
             </button>
@@ -177,7 +177,7 @@ export default function Cart({ cart, onClear, onUpdateQuantity, onConfirm }: Car
 
           <button
             onClick={onClear}
-            className="mt-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm w-full"
+            className="mt-4 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white px-4 py-3 rounded-xl text-sm w-full transition-all duration-300 font-semibold shadow-lg border-2 border-red-500/20 hover:border-red-500/40 hover:shadow-red-500/20"
             disabled={isProcessingPayment}
           >
             Vaciar carrito

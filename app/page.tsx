@@ -131,7 +131,8 @@ useEffect(() => {
       if (catError) {
         console.error('Error cargando categorías:', catError.message);
       } else if (catData) {
-        const unique = Array.from(new Set(catData.map(c => c.name)));
+        const unique = Array.from(new Set(catData.map(c => c.name)))
+          .filter(cat => cat !== 'Sin categoría'); // Filtramos "Sin categoría" de los datos
         setCategories(['Sin categoría', ...unique]);
       }
     } catch (err) {
@@ -282,16 +283,17 @@ const handleEditCategory = async (oldCat: string, newCat: string) => {
 
 const applyPriceUpdate = async () => {
   const newPrice = parseFloat(editingPrice);
-  if (isNaN(newPrice) || !editingPriceProductId) return;
+  const productId = editingPriceProductId || editingProductId;
+  if (isNaN(newPrice) || !productId) return;
 
-  const originalProduct = products.find(p => p.id === editingPriceProductId);
+  const originalProduct = products.find(p => p.id === productId);
   if (!originalProduct) return;
 
   const prevOriginal = originalProduct.originalPrice ?? originalProduct.price;
   const showDiscount = prevOriginal > newPrice;
 
   const updatedProducts = products.map(p =>
-    p.id === editingPriceProductId
+    p.id === productId
       ? {
           ...p,
           price: newPrice,
@@ -307,15 +309,17 @@ const applyPriceUpdate = async () => {
       price: newPrice,
       original_price: showDiscount ? prevOriginal : null,
     })
-    .eq('id', editingPriceProductId);
+    .eq('id', productId);
 
   setCartItems(prev =>
     prev.map(p =>
-      p.id === editingPriceProductId ? { ...p, price: newPrice } : p
+      p.id === productId ? { ...p, price: newPrice } : p
     )
   );
 
+  // Resetear ambos estados de edición
   setEditingPriceProductId(null);
+  setEditingProductId(null);
   setEditingPrice('');
 };
 

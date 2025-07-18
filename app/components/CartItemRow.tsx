@@ -23,12 +23,12 @@ export default function CartItemRow({ item, onUpdateQuantity }: Props) {
   };
 
   return (
-    <li className="flex items-center gap-3 border-b border-gray-600 pb-2">
+    <li className="flex items-center gap-4 border-b-2 border-blue-500/10 pb-4 group hover:border-blue-500/20 transition-all duration-300">
       {item.image && (
         <img
           src={item.image}
           alt={item.name}
-          className="w-10 h-10 object-cover rounded shadow"
+          className="w-12 h-12 object-cover rounded-xl shadow-lg border-2 border-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300"
         />
       )}
       <div className="flex-1">
@@ -43,11 +43,11 @@ export default function CartItemRow({ item, onUpdateQuantity }: Props) {
             value={localQuantity}
             onChange={(e) => setLocalQuantity(e.target.value)}
             onBlur={handleBlur}
-            className="px-2 py-1 w-16 rounded bg-gray-700 text-white text-sm border border-gray-500"
+            className="px-3 py-2 w-20 rounded-xl bg-[#0b1728] text-white text-sm border-2 border-blue-500/20 focus:border-blue-500/40 shadow-lg transition-all duration-300 focus:outline-none"
           />
           <button
             onClick={() => onUpdateQuantity(item.id, 0)}
-            className="text-red-400 text-sm hover:text-red-500"
+            className="text-red-400 text-sm hover:text-red-500 transition-colors duration-300"
             title="Eliminar producto"
           >
             🗑️
